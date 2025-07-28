@@ -188,4 +188,7 @@ Ce projet est sous licence GPL-2.0. Voir le fichier [LICENSE](LICENSE) pour plus
 
 ---
 
+## 🚀 Développement en cours
+Ce plugin est activement développé. Dernière mise à jour: [2025-07-28]
+
 ⭐ **Si ce plugin vous est utile, n'hésitez pas à lui donner une étoile sur GitHub !**
