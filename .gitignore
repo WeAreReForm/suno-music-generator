@@ -1,0 +1,78 @@
+# ==============================================
+# 🎵 Suno Music Generator - WordPress Plugin
+# Fichiers à ignorer dans Git
+# ==============================================
+
+# ====== SYSTÈME ======
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# ====== IDE / ÉDITEURS ======
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# ====== WORDPRESS ======
+wp-config.php
+wp-content/uploads/
+wp-content/cache/
+wp-content/backup-db/
+wp-content/advanced-cache.php
+wp-content/wp-cache-config.php
+wp-content/blogs.dir/
+wp-content/upgrade/*
+wp-files/*
+sitemap.xml
+sitemap.xml.gz
+
+# ====== PHP ======
+*.log
+error_log
+debug.log
+
+# ====== NODE.JS ======
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# ====== COMPOSER ======
+vendor/
+composer.lock
+
+# ====== TEMPORAIRES ======
+*.tmp
+*.temp
+*.bak
+*.backup
+*.orig
+
+# ====== SÉCURITÉ ======
+.env
+.env.local
+.env.production
+*.key
+*.pem
+api-keys.txt
+
+# ====== SPÉCIFIQUE AU PLUGIN ======
+# Logs de debug du plugin
+suno-debug.log
+music-generation-logs/
+temp-audio-files/
+
+# ====== ARCHIVES ======
+*.zip
+*.tar.gz
+*.rar
+*.7z
+
+# ====== DOCUMENTATION GÉNÉRÉE ======
+docs/generated/
