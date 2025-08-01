@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Suno Music Generator
  * Description: Générateur de musique IA avec Suno via formulaire WordPress
- * Version: 1.10.4 (CORRECTION ANTI-BOUCLE - Syntaxe clean)
+ * Version: 1.1 (Corrigé pour SunoAPI.org)
  * Author: Assistant IA
  */
 
@@ -13,28 +13,28 @@ if (!defined('ABSPATH')) {
 class SunoMusicGenerator {
     
     private $api_key;
-    private $api_base_url = 'https://apibox.erweima.ai';
+    private $possible_endpoints = array(
+        'https://apibox.erweima.ai/api/v1/generate',
+        'https://api.sunoapi.org/api/v1/generate',
+        'https://sunoapi.org/api/v1/generate'
+    );
+    
+    private $status_endpoints = array(
+        'https://apibox.erweima.ai/api/v1/music/',
+        'https://api.sunoapi.org/api/v1/music/',
+        'https://api.sunoapi.org/api/get?ids='
+    );
     
     public function __construct() {
-        error_log('=== SUNO PLUGIN v1.10.4 CLEAN - ANTI-BOUCLE ===');
-        
         add_action('init', array($this, 'init'));
         add_action('wp_enqueue_scripts', array($this, 'enqueue_scripts'));
         add_shortcode('suno_music_form', array($this, 'render_music_form'));
         add_shortcode('suno_music_player', array($this, 'render_music_player'));
         add_shortcode('suno_test_api', array($this, 'render_api_test'));
-        add_shortcode('suno_debug', array($this, 'render_debug_info'));
-        add_shortcode('suno_test_db', array($this, 'test_database_insert'));
-        add_shortcode('suno_force_complete', array($this, 'force_complete_old_generations'));
-        add_shortcode('suno_test_shortcode', array($this, 'test_shortcode'));
-        add_shortcode('suno_clear_database', array($this, 'clear_database_shortcode'));
-        
         add_action('wp_ajax_generate_music', array($this, 'ajax_generate_music'));
         add_action('wp_ajax_nopriv_generate_music', array($this, 'ajax_generate_music'));
         add_action('wp_ajax_check_music_status', array($this, 'ajax_check_music_status'));
         add_action('wp_ajax_nopriv_check_music_status', array($this, 'ajax_check_music_status'));
-        add_action('wp_ajax_suno_callback', array($this, 'handle_suno_callback'));
-        add_action('wp_ajax_nopriv_suno_callback', array($this, 'handle_suno_callback'));
         
         register_activation_hook(__FILE__, array($this, 'create_tables'));
         add_action('admin_menu', array($this, 'admin_menu'));
@@ -48,6 +48,7 @@ class SunoMusicGenerator {
         global $wpdb;
         
         $table_name = $wpdb->prefix . 'suno_generations';
+        
         $charset_collate = $wpdb->get_charset_collate();
         
         $sql = "CREATE TABLE $table_name (
@@ -93,16 +94,7 @@ class SunoMusicGenerator {
         $api_key = get_option('suno_api_key', '');
         ?>
         <div class="wrap">
-            <h1>Configuration Suno Music Generator v1.10.4</h1>
-            
-            <div style="background: #d4edda; padding: 15px; border-radius: 5px; color: #155724; margin: 15px 0;">
-                <strong>🛡️ VERSION 1.10.4 - PROTECTION ANTI-BOUCLE ACTIVE</strong><br>
-                ✅ Test API sans génération réelle<br>
-                ✅ Limite de 20 vérifications par génération<br>
-                ✅ Auto-completion après 10 minutes<br>
-                ✅ Protection de vos crédits
-            </div>
-            
+            <h1>Configuration Suno Music Generator</h1>
             <form method="post">
                 <table class="form-table">
                     <tr>
@@ -116,25 +108,25 @@ class SunoMusicGenerator {
                 <?php submit_button(); ?>
             </form>
             
+            <h2>Test de connectivité</h2>
+            <p>Utilisez le shortcode <code>[suno_test_api]</code> pour tester votre connexion API.</p>
+            
             <h2>Shortcodes disponibles</h2>
-            <p><code>[suno_music_form]</code> - Formulaire de génération (PROTÉGÉ)</p>
-            <p><code>[suno_music_player]</code> - Affichage des créations</p>
-            <p><code>[suno_test_api]</code> - Test SANS consommation de crédits</p>
-            <p><code>[suno_debug]</code> - Diagnostic complet</p>
+            <p><code>[suno_music_form]</code> - Affiche le formulaire de génération</p>
+            <p><code>[suno_music_player user_id="X"]</code> - Affiche les créations d'un utilisateur</p>
+            <p><code>[suno_test_api]</code> - Test de connectivité API (admin uniquement)</p>
         </div>
         <?php
     }
     
     public function enqueue_scripts() {
         wp_enqueue_script('jquery');
-        wp_enqueue_script('suno-music-js', plugin_dir_url(__FILE__) . 'assets/suno-music.js', array('jquery'), '1.10.4', true);
-        wp_enqueue_style('suno-music-css', plugin_dir_url(__FILE__) . 'assets/suno-music.css', array(), '1.10.4');
+        wp_enqueue_script('suno-music-js', plugin_dir_url(__FILE__) . 'assets/suno-music.js', array('jquery'), '1.1', true);
+        wp_enqueue_style('suno-music-css', plugin_dir_url(__FILE__) . 'assets/suno-music.css', array(), '1.1');
         
         wp_localize_script('suno-music-js', 'suno_ajax', array(
             'ajax_url' => admin_url('admin-ajax.php'),
-            'nonce' => wp_create_nonce('suno_music_nonce'),
-            'max_checks' => 20,
-            'check_interval' => 5000
+            'nonce' => wp_create_nonce('suno_music_nonce')
         ));
     }
     
@@ -142,11 +134,7 @@ class SunoMusicGenerator {
         ob_start();
         ?>
         <div id="suno-music-form" class="suno-container">
-            <h3>🎵 Créer votre chanson avec l'IA (v1.10.4 🛡️)</h3>
-            
-            <div style="background: #fff3cd; padding: 10px; border-radius: 5px; margin: 15px 0;">
-                <strong>🛡️ Protection activée :</strong> Maximum 20 vérifications par génération pour protéger vos crédits.
-            </div>
+            <h3>🎵 Créer votre chanson avec l'IA</h3>
             
             <form id="music-generation-form">
                 <?php wp_nonce_field('suno_music_nonce', 'suno_nonce'); ?>
@@ -207,9 +195,6 @@ class SunoMusicGenerator {
                     <div class="progress-bar">
                         <div class="progress-fill"></div>
                     </div>
-                    <div style="font-size: 12px; color: #666; margin-top: 10px;">
-                        Vérifications : <span id="check-count">0</span>/20 (protection anti-boucle)
-                    </div>
                 </div>
             </div>
             
@@ -221,183 +206,68 @@ class SunoMusicGenerator {
         return ob_get_clean();
     }
     
-    public function test_shortcode($atts) {
-        return '<div style="background: #d4edda; padding: 15px; border-radius: 5px; margin: 15px 0; color: #155724;">
-            <strong>✅ SUCCÈS !</strong> Plugin v1.10.4 (Anti-boucle) fonctionnel<br>
-            <strong>Heure :</strong> ' . current_time('d/m/Y H:i:s') . '<br>
-            <strong>Protection :</strong> ✅ Boucles infinies bloquées
-        </div>';
-    }
-    
-    // CORRECTION MAJEURE : Test API SANS génération
-    public function test_api_connection() {
-        if (empty($this->api_key)) {
-            return array('error' => 'Clé API manquante');
-        }
+    public function render_music_player($atts) {
+        $atts = shortcode_atts(array(
+            'user_id' => get_current_user_id(),
+            'limit' => 10
+        ), $atts);
         
-        error_log('=== API TEST SÉCURISÉ - SANS GÉNÉRATION ===');
+        global $wpdb;
+        $table_name = $wpdb->prefix . 'suno_generations';
         
-        // Test avec endpoint de vérification (ne génère PAS de chanson)
-        $test_url = $this->api_base_url . '/api/v1/get_limit';
+        $where_clause = $atts['user_id'] ? "WHERE user_id = " . intval($atts['user_id']) : "";
         
-        $response = wp_remote_get($test_url, array(
-            'headers' => array(
-                'Authorization' => 'Bearer ' . $this->api_key,
-                'Content-Type' => 'application/json'
-            ),
-            'timeout' => 15
+        $results = $wpdb->get_results($wpdb->prepare(
+            "SELECT * FROM $table_name $where_clause AND status = 'completed' ORDER BY created_at DESC LIMIT %d",
+            intval($atts['limit'])
         ));
         
-        if (is_wp_error($response)) {
-            return array(
-                'error' => 'Erreur connexion: ' . $response->get_error_message(),
-                'method' => 'GET (SÉCURISÉ - SANS GÉNÉRATION)'
-            );
+        if (empty($results)) {
+            return '<p>Aucune chanson générée pour le moment.</p>';
         }
-        
-        $status_code = wp_remote_retrieve_response_code($response);
-        $body = wp_remote_retrieve_body($response);
-        
-        $result = array(
-            'method' => 'GET (SÉCURISÉ - SANS GÉNÉRATION)',
-            'status_code' => $status_code,
-            'response_body' => $body,
-            'api_key_length' => strlen($this->api_key)
-        );
-        
-        switch ($status_code) {
-            case 200:
-                $result['success'] = true;
-                $result['message'] = 'API fonctionne ! Test SANS consommation de crédits.';
-                break;
-            case 401:
-                $result['success'] = false;
-                $result['message'] = 'Clé API invalide ou expirée';
-                break;
-            case 404:
-                $result['success'] = true;
-                $result['message'] = 'API accessible (endpoint crédits non trouvé mais auth OK)';
-                break;
-            default:
-                $result['success'] = false;
-                $result['message'] = 'Erreur HTTP ' . $status_code;
-        }
-        
-        return $result;
-    }
-    
-    public function render_api_test($atts) {
-        if (!current_user_can('manage_options')) {
-            return '<div style="padding: 15px; background: #f8d7da; border-radius: 5px; color: #721c24;">❌ Accès refusé - Administrateur uniquement</div>';
-        }
-        
-        $test_result = $this->test_api_connection();
         
         ob_start();
         ?>
-        <div style="background: #f9f9f9; padding: 20px; border: 1px solid #ddd; margin: 20px 0; border-radius: 5px; font-family: Arial;">
-            <h3>🛡️ Test SunoAPI.org - v1.10.4 (SÉCURISÉ)</h3>
+        <div class="suno-playlist">
+            <h3>🎵 Vos créations musicales</h3>
             
-            <div style="background: #d4edda; padding: 10px; border-radius: 5px; margin: 10px 0; color: #155724;">
-                <strong>🛡️ CORRECTION ANTI-BOUCLE APPLIQUÉE :</strong><br>
-                ✅ Test API SANS génération de chanson<br>
-                ✅ Aucun crédit consommé par ce test<br>
-                ✅ Protection contre les boucles infinies
+            <?php foreach ($results as $track): ?>
+            <div class="suno-track">
+                <div class="track-info">
+                    <h4><?php echo esc_html($track->title ?: 'Chanson sans titre'); ?></h4>
+                    <p class="track-prompt"><?php echo esc_html(wp_trim_words($track->prompt, 15)); ?></p>
+                    <span class="track-style"><?php echo esc_html($track->style); ?></span>
+                    <span class="track-date"><?php echo date('d/m/Y', strtotime($track->created_at)); ?></span>
+                </div>
+                
+                <?php if ($track->audio_url): ?>
+                <div class="track-player">
+                    <audio controls preload="none">
+                        <source src="<?php echo esc_url($track->audio_url); ?>" type="audio/mpeg">
+                        Votre navigateur ne supporte pas l'élément audio.
+                    </audio>
+                </div>
+                <?php endif; ?>
+                
+                <?php if ($track->image_url): ?>
+                <div class="track-image">
+                    <img src="<?php echo esc_url($track->image_url); ?>" alt="Visuel de la chanson" />
+                </div>
+                <?php endif; ?>
             </div>
-            
-            <?php if (isset($test_result['success']) && $test_result['success']): ?>
-                <div style="background: #d4edda; padding: 15px; border-radius: 5px; margin: 10px 0; color: #155724;">
-                    <strong>✅ SUCCÈS !</strong><br>
-                    <?php echo esc_html($test_result['message']); ?><br>
-                    <em>Test réalisé SANS consommer de crédits !</em>
-                </div>
-            <?php else: ?>
-                <div style="background: #f8d7da; padding: 15px; border-radius: 5px; margin: 10px 0; color: #721c24;">
-                    <strong>❌ PROBLÈME</strong><br>
-                    <?php echo esc_html($test_result['message'] ?? 'Erreur inconnue'); ?><br>
-                    <?php if ($test_result['status_code'] === 401): ?>
-                        <em>Vérifiez votre clé API sur sunoapi.org</em>
-                    <?php endif; ?>
-                </div>
-            <?php endif; ?>
+            <?php endforeach; ?>
         </div>
         <?php
         return ob_get_clean();
     }
     
-    // CORRECTION : Vérification avec limite anti-boucle
-    public function ajax_check_music_status() {
-        error_log('=== CHECK MUSIC STATUS v1.10.4 ANTI-BOUCLE ===');
-        
-        check_ajax_referer('suno_music_nonce', 'nonce');
-        
-        $task_id = sanitize_text_field($_POST['task_id']);
-        $check_count = intval($_POST['check_count'] ?? 0);
-        
-        // GARDE-FOU : Maximum 20 vérifications
-        if ($check_count >= 20) {
-            error_log('ANTI-LOOP: Maximum checks reached for task: ' . $task_id);
-            
-            global $wpdb;
-            $table_name = $wpdb->prefix . 'suno_generations';
-            $wpdb->update($table_name, 
-                array('status' => 'completed', 'completed_at' => current_time('mysql')), 
-                array('task_id' => $task_id)
-            );
-            
-            wp_send_json_success(array(
-                'status' => 'completed',
-                'message' => 'Protection anti-boucle activée - Génération marquée comme terminée',
-                'anti_loop_triggered' => true,
-                'check_count' => $check_count
-            ));
-            return;
-        }
-        
-        // Vérification timeout (10 minutes)
-        global $wpdb;
-        $table_name = $wpdb->prefix . 'suno_generations';
-        
-        $generation = $wpdb->get_row($wpdb->prepare(
-            "SELECT * FROM $table_name WHERE task_id = %s",
-            $task_id
-        ));
-        
-        if ($generation) {
-            $elapsed_minutes = (time() - strtotime($generation->created_at)) / 60;
-            
-            if ($elapsed_minutes > 10 && $generation->status === 'pending') {
-                error_log('Auto-completing generation due to timeout: ' . $elapsed_minutes . ' minutes');
-                $wpdb->update($table_name, 
-                    array('status' => 'completed', 'completed_at' => current_time('mysql')), 
-                    array('task_id' => $task_id)
-                );
-                
-                wp_send_json_success(array(
-                    'status' => 'completed',
-                    'message' => 'Génération terminée (timeout 10 minutes)',
-                    'check_count' => $check_count + 1
-                ));
-                return;
-            }
-        }
-        
-        // Statut par défaut avec compteur
-        wp_send_json_success(array(
-            'status' => 'processing',
-            'message' => 'Génération en cours...',
-            'check_count' => $check_count + 1,
-            'max_checks' => 20
-        ));
-    }
-    
     public function ajax_generate_music() {
-        error_log('=== GENERATE MUSIC v1.10.4 PROTECTED ===');
+        error_log('=== SUNO AJAX GENERATE MUSIC (CORRECTED v1.1) ===');
         
         check_ajax_referer('suno_music_nonce', 'nonce');
         
         if (empty($this->api_key)) {
-            wp_send_json_error('Clé API Suno non configurée.');
+            wp_send_json_error('Clé API Suno non configurée. Allez dans Réglages > Suno Music.');
         }
         
         $prompt = sanitize_textarea_field($_POST['prompt']);
@@ -410,344 +280,358 @@ class SunoMusicGenerator {
             wp_send_json_error('Description requise');
         }
         
-        // Données API
+        error_log('Prompt: ' . $prompt);
+        error_log('API Key configured: YES (length: ' . strlen($this->api_key) . ')');
+        
+        // Format de données pour SunoAPI.org
         $api_data = array(
-            'prompt' => $prompt,
-            'customMode' => false,
-            'instrumental' => $instrumental,
-            'model' => 'V3_5'
+            'customMode' => true,
+            'input' => array(
+                'gpt_description_prompt' => $prompt,
+                'make_instrumental' => $instrumental
+            )
         );
         
-        if (!empty($style) || !empty($title) || !empty($lyrics)) {
-            $api_data['customMode'] = true;
-            if (!empty($style)) $api_data['style'] = $style;
-            if (!empty($title)) $api_data['title'] = $title;
-            if (!empty($lyrics)) $api_data['lyric'] = $lyrics;
+        // Ajouter les paramètres optionnels
+        if (!empty($style)) {
+            $api_data['input']['style'] = $style;
         }
         
-        $response = wp_remote_post($this->api_base_url . '/api/v1/generate', array(
-            'headers' => array(
-                'Authorization' => 'Bearer ' . $this->api_key,
-                'Content-Type' => 'application/json'
-            ),
-            'body' => json_encode($api_data),
-            'timeout' => 30
-        ));
-        
-        if (is_wp_error($response)) {
-            wp_send_json_error('Erreur de connexion API');
-            return;
+        if (!empty($title)) {
+            $api_data['input']['title'] = $title;
         }
         
-        $status_code = wp_remote_retrieve_response_code($response);
-        $body = wp_remote_retrieve_body($response);
-        
-        if ($status_code !== 200) {
-            wp_send_json_error('Erreur API (Code: ' . $status_code . ')');
-            return;
+        if (!empty($lyrics)) {
+            $api_data['input']['lyric'] = $lyrics;
         }
         
-        $data = json_decode($body, true);
-        if (!$data) {
-            wp_send_json_error('Réponse API invalide');
-            return;
-        }
+        error_log('API Data: ' . json_encode($api_data));
         
-        // Extraire task_id
-        $task_id = null;
-        if (isset($data['code']) && $data['code'] === 200) {
-            if (isset($data['data']['taskId'])) {
-                $task_id = $data['data']['taskId'];
-            } elseif (isset($data['data']['task_id'])) {
-                $task_id = $data['data']['task_id'];
+        // Essayer différents endpoints
+        foreach ($this->possible_endpoints as $api_url) {
+            error_log('Trying endpoint: ' . $api_url);
+            
+            $response = wp_remote_post($api_url, array(
+                'headers' => array(
+                    'Authorization' => 'Bearer ' . $this->api_key,
+                    'Content-Type' => 'application/json'
+                ),
+                'body' => json_encode($api_data),
+                'timeout' => 30
+            ));
+            
+            if (is_wp_error($response)) {
+                error_log('Endpoint ' . $api_url . ' failed: ' . $response->get_error_message());
+                continue;
+            }
+            
+            $status_code = wp_remote_retrieve_response_code($response);
+            $body = wp_remote_retrieve_body($response);
+            
+            error_log('Endpoint ' . $api_url . ' - Status: ' . $status_code);
+            error_log('Response: ' . $body);
+            
+            if ($status_code === 200) {
+                $data = json_decode($body, true);
+                
+                // Vérifier différents formats de réponse
+                $task_id = null;
+                if (isset($data['task_id'])) {
+                    $task_id = $data['task_id'];
+                } elseif (isset($data['id'])) {
+                    $task_id = $data['id'];
+                } elseif (isset($data['data']['task_id'])) {
+                    $task_id = $data['data']['task_id'];
+                } elseif (isset($data['data']['id'])) {
+                    $task_id = $data['data']['id'];
+                } elseif (isset($data['code']) && $data['code'] === 200 && isset($data['data'])) {
+                    $task_id = $data['data'];
+                }
+                
+                if ($task_id) {
+                    error_log('SUCCESS! Task ID: ' . $task_id . ' with endpoint: ' . $api_url);
+                    
+                    // Sauvegarder en base de données
+                    global $wpdb;
+                    $table_name = $wpdb->prefix . 'suno_generations';
+                    
+                    $insert_result = $wpdb->insert($table_name, array(
+                        'user_id' => get_current_user_id(),
+                        'task_id' => $task_id,
+                        'prompt' => $prompt,
+                        'style' => $style,
+                        'title' => $title,
+                        'lyrics' => $lyrics,
+                        'status' => 'pending',
+                        'created_at' => current_time('mysql')
+                    ));
+                    
+                    if ($insert_result === false) {
+                        error_log('Database insert failed: ' . $wpdb->last_error);
+                    }
+                    
+                    wp_send_json_success(array(
+                        'task_id' => $task_id,
+                        'message' => 'Génération démarrée avec succès !',
+                        'endpoint_used' => $api_url
+                    ));
+                    return;
+                } else {
+                    error_log('No task_id found in response: ' . json_encode($data));
+                }
+            } elseif ($status_code === 401) {
+                wp_send_json_error('Clé API invalide. Vérifiez votre clé dans Réglages > Suno Music.');
+                return;
+            } elseif ($status_code === 429) {
+                wp_send_json_error('Limite de crédits atteinte. Ajoutez des crédits sur sunoapi.org.');
+                return;
             }
         }
         
-        if (!$task_id) {
-            wp_send_json_error('Pas de task_id reçu');
-            return;
+        // Aucun endpoint n'a fonctionné
+        error_log('All endpoints failed');
+        wp_send_json_error('Impossible de se connecter à l\'API Suno. Vérifiez votre clé API et vos crédits.');
+    }
+    
+    public function ajax_check_music_status() {
+        error_log('=== CHECK MUSIC STATUS (CORRECTED v1.1) ===');
+        
+        check_ajax_referer('suno_music_nonce', 'nonce');
+        
+        $task_id = sanitize_text_field($_POST['task_id']);
+        
+        if (empty($task_id)) {
+            wp_send_json_error('Task ID requis');
         }
         
-        // Sauvegarder en base
-        global $wpdb;
-        $table_name = $wpdb->prefix . 'suno_generations';
-        
-        $insert_result = $wpdb->insert($table_name, array(
-            'user_id' => get_current_user_id(),
-            'task_id' => $task_id,
-            'prompt' => $prompt,
-            'style' => $style,
-            'title' => $title,
-            'lyrics' => $lyrics,
-            'status' => 'pending',
-            'created_at' => current_time('mysql')
-        ));
-        
-        if ($insert_result === false) {
-            wp_send_json_error('Erreur de sauvegarde');
-            return;
+        if (empty($this->api_key)) {
+            wp_send_json_error('Clé API non configurée');
         }
         
+        error_log('Checking status for task: ' . $task_id);
+        
+        // Essayer différents endpoints pour récupérer le statut
+        foreach ($this->status_endpoints as $base_url) {
+            $api_url = $base_url . $task_id;
+            error_log('Trying status endpoint: ' . $api_url);
+            
+            $response = wp_remote_get($api_url, array(
+                'headers' => array(
+                    'Authorization' => 'Bearer ' . $this->api_key,
+                    'Content-Type' => 'application/json'
+                ),
+                'timeout' => 15
+            ));
+            
+            if (is_wp_error($response)) {
+                error_log('Status endpoint failed: ' . $response->get_error_message());
+                continue;
+            }
+            
+            $status_code = wp_remote_retrieve_response_code($response);
+            $body = wp_remote_retrieve_body($response);
+            
+            error_log('Status endpoint ' . $api_url . ' - Code: ' . $status_code);
+            
+            if ($status_code === 200) {
+                $data = json_decode($body, true);
+                
+                if ($data) {
+                    // Adapter selon le format de réponse
+                    $track_data = $data;
+                    
+                    // Si c'est un tableau, prendre le premier élément
+                    if (is_array($data) && isset($data[0])) {
+                        $track_data = $data[0];
+                    }
+                    
+                    // Si data est dans un wrapper
+                    if (isset($track_data['data'])) {
+                        if (is_array($track_data['data'])) {
+                            $track_data = $track_data['data'][0] ?? $track_data['data'];
+                        } else {
+                            $track_data = $track_data['data'];
+                        }
+                    }
+                    
+                    error_log('Track data received: ' . json_encode($track_data));
+                    
+                    // Mettre à jour la base de données
+                    global $wpdb;
+                    $table_name = $wpdb->prefix . 'suno_generations';
+                    
+                    $update_data = array();
+                    
+                    // Status mapping - essayer différents champs
+                    $status_fields = ['status', 'state', 'progress'];
+                    foreach ($status_fields as $field) {
+                        if (isset($track_data[$field])) {
+                            $update_data['status'] = $track_data[$field];
+                            break;
+                        }
+                    }
+                    
+                    // URL audio - essayer différents champs
+                    $audio_fields = ['audio_url', 'audioUrl', 'url', 'file_url', 'audio'];
+                    foreach ($audio_fields as $field) {
+                        if (isset($track_data[$field]) && !empty($track_data[$field])) {
+                            $update_data['audio_url'] = $track_data[$field];
+                            $update_data['status'] = 'completed';
+                            $update_data['completed_at'] = current_time('mysql');
+                            break;
+                        }
+                    }
+                    
+                    // URL vidéo
+                    $video_fields = ['video_url', 'videoUrl', 'video'];
+                    foreach ($video_fields as $field) {
+                        if (isset($track_data[$field]) && !empty($track_data[$field])) {
+                            $update_data['video_url'] = $track_data[$field];
+                            break;
+                        }
+                    }
+                    
+                    // URL image
+                    $image_fields = ['image_url', 'imageUrl', 'image', 'cover_url', 'artwork'];
+                    foreach ($image_fields as $field) {
+                        if (isset($track_data[$field]) && !empty($track_data[$field])) {
+                            $update_data['image_url'] = $track_data[$field];
+                            break;
+                        }
+                    }
+                    
+                    // Durée
+                    if (isset($track_data['duration'])) {
+                        $update_data['duration'] = intval($track_data['duration']);
+                    }
+                    
+                    if (!empty($update_data)) {
+                        $wpdb->update($table_name, $update_data, array('task_id' => $task_id));
+                        error_log('Database updated successfully with: ' . json_encode($update_data));
+                    }
+                    
+                    wp_send_json_success($update_data);
+                    return;
+                }
+            }
+        }
+        
+        // Statut par défaut si aucun endpoint ne répond
         wp_send_json_success(array(
-            'task_id' => $task_id,
-            'message' => 'Génération démarrée avec protection anti-boucle',
-            'protection_enabled' => true
+            'status' => 'processing',
+            'message' => 'Génération en cours...'
         ));
     }
     
-    public function render_music_player($atts) {
-        $atts = shortcode_atts(array(
-            'user_id' => get_current_user_id(),
-            'limit' => 10
-        ), $atts);
-        
-        global $wpdb;
-        $table_name = $wpdb->prefix . 'suno_generations';
-        
-        $results = $wpdb->get_results($wpdb->prepare(
-            "SELECT * FROM $table_name WHERE user_id = %d ORDER BY created_at DESC LIMIT %d",
-            intval($atts['user_id']),
-            intval($atts['limit'])
-        ));
-        
-        if (empty($results)) {
-            return '<div style="background: #fff3cd; padding: 15px; border-radius: 5px;">
-                <strong>ℹ️ Aucune chanson générée.</strong><br>
-                <em>Utilisez [suno_music_form] pour créer votre première chanson !</em><br>
-                <small>🛡️ v1.10.4 - Protection anti-boucle active</small>
-            </div>';
+    public function test_api_connection() {
+        if (empty($this->api_key)) {
+            return array('error' => 'Clé API manquante');
         }
+        
+        // Test avec différents endpoints
+        $test_endpoints = array(
+            'https://apibox.erweima.ai/api/v1/get_limit',
+            'https://api.sunoapi.org/api/v1/get_limit',
+            'https://api.sunoapi.org/get_limit'
+        );
+        
+        $results = array();
+        
+        foreach ($test_endpoints as $url) {
+            $response = wp_remote_get($url, array(
+                'headers' => array(
+                    'Authorization' => 'Bearer ' . $this->api_key,
+                    'Content-Type' => 'application/json'
+                ),
+                'timeout' => 15
+            ));
+            
+            if (is_wp_error($response)) {
+                $results[$url] = 'ERROR: ' . $response->get_error_message();
+            } else {
+                $status_code = wp_remote_retrieve_response_code($response);
+                $body = wp_remote_retrieve_body($response);
+                
+                $results[$url] = array(
+                    'status_code' => $status_code,
+                    'body' => $status_code === 200 ? 'SUCCESS' : 'FAILED: ' . substr($body, 0, 100)
+                );
+                
+                if ($status_code === 200) {
+                    $results['WORKING_ENDPOINT'] = $url;
+                }
+            }
+        }
+        
+        return $results;
+    }
+    
+    public function render_api_test($atts) {
+        if (!current_user_can('manage_options')) {
+            return '<div style="padding: 15px; background: #f8d7da; border-radius: 5px; color: #721c24;">❌ Accès refusé - Administrateur uniquement</div>';
+        }
+        
+        $test_result = $this->test_api_connection();
         
         ob_start();
         ?>
-        <div class="suno-playlist">
-            <h3>🎵 Vos créations musicales (<?php echo count($results); ?>) - v1.10.4 🛡️</h3>
+        <div style="background: #f9f9f9; padding: 20px; border: 1px solid #ddd; margin: 20px 0; border-radius: 5px; font-family: Arial;">
+            <h3>🔧 Test SunoAPI.org - Version 1.1</h3>
             
-            <?php foreach ($results as $track): ?>
-            <div class="suno-track">
-                <div class="track-info">
-                    <h4><?php echo esc_html($track->title ?: 'Chanson sans titre'); ?></h4>
-                    <p><?php echo esc_html(wp_trim_words($track->prompt, 15)); ?></p>
-                    <small><?php echo date('d/m/Y H:i', strtotime($track->created_at)); ?> - <?php echo esc_html($track->status); ?></small>
+            <div style="background: #e7f3ff; padding: 10px; border-radius: 5px; margin: 10px 0;">
+                <strong>Configuration :</strong><br>
+                ✅ Clé API : <?php echo !empty($this->api_key) ? 'Configurée (' . strlen($this->api_key) . ' caractères)' : '❌ NON CONFIGURÉE'; ?><br>
+                ✅ Plugin : Actif (Version 1.1 corrigée)
+            </div>
+            
+            <?php if (isset($test_result['WORKING_ENDPOINT'])): ?>
+                <div style="background: #d4edda; padding: 15px; border-radius: 5px; margin: 10px 0; color: #155724;">
+                    <strong>✅ SUCCÈS !</strong><br>
+                    <strong>Endpoint fonctionnel :</strong> <?php echo esc_html($test_result['WORKING_ENDPOINT']); ?><br>
+                    <em>Votre API fonctionne ! Testez maintenant le formulaire de génération.</em>
                 </div>
-                
-                <?php if ($track->status === 'completed' && $track->audio_url): ?>
-                    <div class="track-player">
-                        <audio controls>
-                            <source src="<?php echo esc_url($track->audio_url); ?>" type="audio/mpeg">
-                        </audio>
-                    </div>
-                <?php elseif ($track->status === 'pending'): ?>
-                    <div style="background: #fff3cd; padding: 10px; border-radius: 5px; font-size: 14px;">
-                        🔄 Génération en cours (protection anti-boucle active)
-                    </div>
+            <?php elseif (isset($test_result['error'])): ?>
+                <div style="background: #f8d7da; padding: 15px; border-radius: 5px; margin: 10px 0; color: #721c24;">
+                    <strong>❌ ERREUR</strong><br>
+                    <?php echo esc_html($test_result['error']); ?><br>
+                    Allez dans <strong>Réglages > Suno Music</strong> pour configurer votre clé API.
+                </div>
+            <?php else: ?>
+                <div style="background: #f8d7da; padding: 15px; border-radius: 5px; margin: 10px 0; color: #721c24;">
+                    <strong>❌ ÉCHEC</strong><br>
+                    Aucun endpoint ne répond correctement.<br>
+                    <strong>Vérifiez :</strong>
+                    <ul>
+                        <li>Votre clé API sur sunoapi.org</li>
+                        <li>Que vous avez des crédits disponibles</li>
+                        <li>Que la clé n'est pas expirée</li>
+                    </ul>
+                </div>
+            <?php endif; ?>
+            
+            <details style="margin: 15px 0;">
+                <summary style="cursor: pointer; padding: 10px; background: #e9ecef; border-radius: 5px;">
+                    🔍 Détails techniques (cliquez pour voir)
+                </summary>
+                <pre style="background: #fff; padding: 10px; border: 1px solid #ccc; margin-top: 10px; overflow: auto; font-size: 11px;"><?php echo esc_html(print_r($test_result, true)); ?></pre>
+            </details>
+            
+            <div style="background: #fff3cd; padding: 10px; border-radius: 5px; margin: 10px 0;">
+                <strong>📋 Prochaines étapes :</strong><br>
+                <?php if (isset($test_result['WORKING_ENDPOINT'])): ?>
+                    1. ✅ L'API fonctionne !<br>
+                    2. 🎵 Testez le formulaire avec [suno_music_form]<br>
+                    3. 🔍 Si problème, vérifiez les logs WordPress
+                <?php else: ?>
+                    1. 🔑 Allez dans Réglages > Suno Music<br>
+                    2. 🔑 Configurez votre clé API de sunoapi.org<br>
+                    3. 💰 Vérifiez vos crédits sur votre dashboard
                 <?php endif; ?>
             </div>
-            <?php endforeach; ?>
         </div>
         <?php
         return ob_get_clean();
     }
-    
-    public function render_debug_info($atts) {
-        if (!current_user_can('manage_options')) {
-            return '<div style="background: #f8d7da; padding: 15px; border-radius: 5px; color: #721c24;">❌ Accès refusé</div>';
-        }
-        
-        global $wpdb;
-        $table_name = $wpdb->prefix . 'suno_generations';
-        
-        $total_count = $wpdb->get_var("SELECT COUNT(*) FROM $table_name");
-        $pending_count = $wpdb->get_var("SELECT COUNT(*) FROM $table_name WHERE status = 'pending'");
-        $completed_count = $wpdb->get_var("SELECT COUNT(*) FROM $table_name WHERE status = 'completed'");
-        
-        return '<div style="background: #f9f9f9; padding: 20px; border-radius: 5px;">
-            <h3>🔍 Debug v1.10.4 - Protection Anti-Boucle</h3>
-            <p><strong>Total:</strong> ' . $total_count . '</p>
-            <p><strong>En cours:</strong> ' . $pending_count . '</p>
-            <p><strong>Terminées:</strong> ' . $completed_count . '</p>
-            <div style="background: #d4edda; padding: 10px; border-radius: 5px; color: #155724; margin: 10px 0;">
-                🛡️ <strong>Protections actives:</strong><br>
-                ✅ Limite 20 vérifications par génération<br>
-                ✅ Auto-completion après 10 minutes<br>
-                ✅ Test API sans consommation de crédits
-            </div>
-        </div>';
-    }
-
-    
-    
-    // Fonctions simples pour éviter les erreurs
-    public function force_complete_old_generations($atts) {
-        if (!current_user_can('manage_options')) {
-            return '<div style="background: #f8d7da; padding: 15px; border-radius: 5px; color: #721c24;">❌ Accès refusé</div>';
-        }
-        return '<div style="background: #fff3cd; padding: 15px; border-radius: 5px;">
-            <strong>🔄 Force Complete v1.10.4</strong><br>
-            Fonction disponible mais simplifiée dans cette version.
-        </div>';
-    }
-    
-    public function test_database_insert($atts) {
-        if (!current_user_can('manage_options')) {
-            return '<div style="background: #f8d7da; padding: 15px; border-radius: 5px; color: #721c24;">❌ Accès refusé</div>';
-        }
-        return '<div style="background: #fff3cd; padding: 15px; border-radius: 5px;">
-            <strong>🧪 Test DB v1.10.4</strong><br>
-            Fonction disponible mais simplifiée dans cette version.
-        </div>';
-    }
-    
-    public function handle_suno_callback() {
-        error_log('=== SUNO CALLBACK v1.10.4 ===');
-        wp_send_json_success(array('message' => 'Callback traité v1.10.4'));
-    }
-
-    public function clear_database_shortcode($atts) {
-    if (!current_user_can('manage_options')) {
-        return '<div style="padding: 15px; background: #f8d7da; border-radius: 5px; color: #721c24;">❌ Accès refusé - Administrateur uniquement</div>';
-    }
-    
-    global $wpdb;
-    $table_name = $wpdb->prefix . 'suno_generations';
-    
-    // Vérifier si on doit faire l'action
-    if (isset($_GET['confirm_clear']) && $_GET['confirm_clear'] === '1') {
-        // Sauvegarder les anciennes données avant suppression
-        $backup_data = $wpdb->get_results("SELECT * FROM $table_name ORDER BY created_at DESC");
-        $backup_count = count($backup_data);
-        
-        // Vider la table
-        $result = $wpdb->query("TRUNCATE TABLE $table_name");
-        
-        if ($result !== false) {
-            $success_message = "✅ <strong>SUCCÈS !</strong> Base de données vidée.<br>";
-            $success_message .= "<strong>Supprimé :</strong> {$backup_count} entrée(s)<br>";
-            $success_message .= "<strong>Table :</strong> {$table_name}";
-            $message_type = 'success';
-        } else {
-            $success_message = "❌ <strong>ERREUR !</strong> Impossible de vider la table: " . $wpdb->last_error;
-            $message_type = 'error';
-        }
-        
-        // Affichage des données supprimées pour référence
-        $backup_details = '';
-        if (!empty($backup_data)) {
-            $backup_details = '<details style="margin: 15px 0;">
-                <summary style="cursor: pointer; padding: 10px; background: #e9ecef; border-radius: 5px;">
-                    📋 Données supprimées (cliquez pour voir)
-                </summary>
-                <div style="background: #f8f9fa; padding: 10px; margin: 10px 0; border-radius: 5px; font-family: monospace; font-size: 12px; max-height: 300px; overflow-y: auto;">';
-            
-            foreach ($backup_data as $item) {
-                $backup_details .= sprintf(
-                    "<strong>ID %d:</strong> %s | %s | %s | Créé: %s<br>",
-                    $item->id,
-                    esc_html($item->title ?: 'Sans titre'),
-                    esc_html(wp_trim_words($item->prompt, 8)),
-                    esc_html($item->status),
-                    date('d/m/Y H:i', strtotime($item->created_at))
-                );
-            }
-            
-            $backup_details .= '</div></details>';
-        }
-    }
-    
-    // Statistiques actuelles
-    $current_count = $wpdb->get_var("SELECT COUNT(*) FROM $table_name");
-    $pending_count = $wpdb->get_var("SELECT COUNT(*) FROM $table_name WHERE status = 'pending'");
-    $completed_count = $wpdb->get_var("SELECT COUNT(*) FROM $table_name WHERE status = 'completed'");
-    
-    ob_start();
-    ?>
-    <div style="background: #f9f9f9; padding: 20px; border: 1px solid #ddd; margin: 20px 0; border-radius: 5px; font-family: Arial;">
-        <h3>🗄️ Vider la base de données - v1.10.4</h3>
-        
-        <?php if (isset($success_message)): ?>
-            <div style="background: <?php echo $message_type === 'success' ? '#d4edda' : '#f8d7da'; ?>; padding: 15px; border-radius: 5px; margin: 15px 0; color: <?php echo $message_type === 'success' ? '#155724' : '#721c24'; ?>;">
-                <?php echo $success_message; ?>
-                
-                <?php if ($message_type === 'success'): ?>
-                    <br><br><strong>📋 Résultat :</strong><br>
-                    ✅ Table vidée et prête pour nouveaux tests<br>
-                    ✅ Base de données propre<br>
-                    ✅ [suno_debug] affichera maintenant 0 entrée<br>
-                    ✅ [suno_music_player] affichera "Aucune chanson"
-                    
-                    <br><br>
-                    <a href="<?php echo remove_query_arg('confirm_clear'); ?>" style="background: #007cba; color: white; padding: 8px 15px; border-radius: 3px; text-decoration: none;">
-                        ← Retour
-                    </a>
-                <?php endif; ?>
-            </div>
-            
-            <?php if ($message_type === 'success' && isset($backup_details)): ?>
-                <?php echo $backup_details; ?>
-            <?php endif; ?>
-            
-        <?php else: ?>
-            <div style="background: #e7f3ff; padding: 15px; border-radius: 5px; margin: 15px 0;">
-                <h4>📊 État actuel de la base de données</h4>
-                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 15px; margin: 15px 0;">
-                    <div style="background: #fff; padding: 15px; border-radius: 5px; text-align: center;">
-                        <strong>Total</strong><br>
-                        <span style="font-size: 24px; color: #007cba;"><?php echo $current_count; ?></span><br>
-                        <small>entrées</small>
-                    </div>
-                    <div style="background: #fff; padding: 15px; border-radius: 5px; text-align: center;">
-                        <strong>En cours</strong><br>
-                        <span style="font-size: 24px; color: #f39c12;"><?php echo $pending_count; ?></span><br>
-                        <small>pending</small>
-                    </div>
-                    <div style="background: #fff; padding: 15px; border-radius: 5px; text-align: center;">
-                        <strong>Terminées</strong><br>
-                        <span style="font-size: 24px; color: #27ae60;"><?php echo $completed_count; ?></span><br>
-                        <small>completed</small>
-                    </div>
-                </div>
-                
-                <h4>🎯 Pourquoi vider la base ?</h4>
-                <ul>
-                    <li>🧪 <strong>Tests propres</strong> : Repartir sur une base vierge</li>
-                    <li>📊 <strong>Résultats clairs</strong> : Voir exactement vos nouveaux tests</li>
-                    <li>🔍 <strong>Debug facilité</strong> : Plus d'anciennes données qui perturbent</li>
-                    <li>🛡️ <strong>Test protection</strong> : Vérifier que v1.10.4 fonctionne bien</li>
-                </ul>
-                
-                <?php if ($current_count > 0): ?>
-                    <div style="text-align: center; margin: 20px 0;">
-                        <a href="?confirm_clear=1" 
-                           onclick="return confirm('⚠️ ATTENTION ⚠️\n\nCette action va SUPPRIMER DÉFINITIVEMENT toutes les <?php echo $current_count; ?> entrées de la base de données.\n\n✅ Les données seront affichées avant suppression\n❌ Cette action est IRRÉVERSIBLE\n\nContinuer ?')"
-                           style="background: #dc3545; color: white; padding: 12px 24px; border-radius: 5px; text-decoration: none; font-weight: bold;">
-                            🗑️ VIDER LA BASE DE DONNÉES (<?php echo $current_count; ?> entrées)
-                        </a>
-                    </div>
-                    
-                    <div style="background: #fff3cd; padding: 10px; border-radius: 5px; margin: 15px 0; font-size: 14px;">
-                        <strong>⚠️ SÉCURITÉ :</strong><br>
-                        - Confirmation obligatoire avant suppression<br>
-                        - Sauvegarde temporaire des données supprimées<br>
-                        - Action réservée aux administrateurs<br>
-                        - Aucun impact sur la structure de la table
-                    </div>
-                <?php else: ?>
-                    <div style="background: #d4edda; padding: 15px; border-radius: 5px; margin: 15px 0; color: #155724; text-align: center;">
-                        ✅ <strong>Base de données déjà vide !</strong><br>
-                        Parfait pour commencer des tests propres.
-                    </div>
-                <?php endif; ?>
-            </div>
-        <?php endif; ?>
-        
-        <div style="background: #e9ecef; padding: 10px; border-radius: 5px; margin: 15px 0;">
-            <p><strong>💡 Pour utiliser cette fonction :</strong> Ajoutez <code>[suno_clear_database]</code> sur une page (admin uniquement)</p>
-            <p><strong>🔙 Après vidage :</strong> Testez avec <code>[suno_debug]</code> | <code>[suno_music_player]</code></p>
-        </div>
-    </div>
-    <?php
-    return ob_get_clean();
-}
 }
 
 new SunoMusicGenerator();
