@@ -1,14 +1,17 @@
 /**
- * Suno Music Generator - Styles CSS
+ * Suno Music Generator - Styles CSS v1.10.4
+ * Protection anti-boucle et améliorations UX
  */
 
-/* Variables CSS */
+/* Variables CSS améliorées v1.10.4 */
 :root {
     --suno-primary: #6366f1;
     --suno-primary-dark: #4f46e5;
     --suno-secondary: #f59e0b;
     --suno-success: #10b981;
+    --suno-warning: #f59e0b;
     --suno-error: #ef4444;
+    --suno-info: #0ea5e9;
     --suno-background: #f8fafc;
     --suno-surface: #ffffff;
     --suno-text: #1e293b;
@@ -18,9 +21,14 @@
     --suno-shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
     --suno-border-radius: 12px;
     --suno-transition: all 0.3s ease;
+    
+    /* Nouvelles variables v1.10.4 */
+    --suno-protection: #22c55e;
+    --suno-protection-bg: #f0fdf4;
+    --suno-protection-border: #bbf7d0;
 }
 
-/* Container principal */
+/* Container principal amélioré */
 .suno-container {
     max-width: 800px;
     margin: 0 auto;
@@ -29,6 +37,22 @@
     border-radius: var(--suno-border-radius);
     box-shadow: var(--suno-shadow-lg);
     border: 1px solid var(--suno-border);
+    position: relative;
+}
+
+/* Badge de version v1.10.4 */
+.suno-container::before {
+    content: "🛡️ v1.10.4";
+    position: absolute;
+    top: -10px;
+    right: 20px;
+    background: var(--suno-protection);
+    color: white;
+    padding: 0.25rem 0.75rem;
+    border-radius: 12px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    box-shadow: var(--suno-shadow);
 }
 
 .suno-container h3 {
@@ -41,6 +65,41 @@
     background-clip: text;
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
+}
+
+/* Alertes de protection v1.10.4 */
+.protection-alert {
+    background: var(--suno-protection-bg);
+    border: 2px solid var(--suno-protection-border);
+    border-radius: 8px;
+    padding: 1rem;
+    margin: 1rem 0;
+    color: #166534;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.protection-alert::before {
+    content: "🛡️";
+    font-size: 1.2rem;
+}
+
+.warning-alert {
+    background: #fefce8;
+    border: 2px solid #fde047;
+    border-radius: 8px;
+    padding: 1rem;
+    margin: 1rem 0;
+    color: #a16207;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.warning-alert::before {
+    content: "⚠️";
+    font-size: 1.2rem;
 }
 
 /* Formulaire */
@@ -150,7 +209,7 @@
     transform: none !important;
 }
 
-/* Statut de génération */
+/* Statut de génération amélioré v1.10.4 */
 .suno-status {
     background: linear-gradient(135deg, #f0f9ff, #e0f2fe);
     border: 2px solid #0ea5e9;
@@ -158,6 +217,7 @@
     padding: 2rem;
     text-align: center;
     margin-top: 1.5rem;
+    position: relative;
 }
 
 .status-content {
@@ -172,6 +232,48 @@
     font-size: 1.1rem;
     font-weight: 600;
     color: var(--suno-text);
+}
+
+/* Compteur de protection v1.10.4 */
+.protection-counter {
+    background: var(--suno-protection-bg);
+    border: 1px solid var(--suno-protection-border);
+    border-radius: 8px;
+    padding: 0.75rem;
+    margin-top: 1rem;
+    font-size: 0.9rem;
+    color: #166534;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.counter-text {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.counter-text::before {
+    content: "🛡️";
+    font-size: 1rem;
+}
+
+.counter-progress {
+    font-weight: 600;
+    font-family: monospace;
+}
+
+.counter-warning {
+    background: #fef3c7;
+    border-color: #f59e0b;
+    color: #92400e;
+}
+
+.counter-danger {
+    background: #fee2e2;
+    border-color: #ef4444;
+    color: #dc2626;
 }
 
 /* Spinner */
@@ -189,13 +291,14 @@
     100% { transform: rotate(360deg); }
 }
 
-/* Barre de progression */
+/* Barre de progression améliorée */
 .progress-bar {
     width: 100%;
     height: 8px;
     background: var(--suno-border);
     border-radius: 4px;
     overflow: hidden;
+    position: relative;
 }
 
 .progress-fill {
@@ -203,6 +306,10 @@
     background: linear-gradient(90deg, var(--suno-primary), var(--suno-secondary));
     transition: width 0.5s ease;
     border-radius: 4px;
+}
+
+.progress-protection {
+    background: linear-gradient(90deg, var(--suno-protection), #16a34a);
 }
 
 /* Résultats */
@@ -233,76 +340,7 @@
     box-shadow: var(--suno-shadow);
 }
 
-.track-artwork {
-    text-align: center;
-    margin: 1.5rem 0;
-}
-
-.track-artwork img {
-    max-width: 300px;
-    width: 100%;
-    border-radius: var(--suno-border-radius);
-    box-shadow: var(--suno-shadow-lg);
-}
-
-.result-actions {
-    display: flex;
-    gap: 1rem;
-    justify-content: center;
-    flex-wrap: wrap;
-    margin: 1.5rem 0;
-}
-
-/* Partage social */
-.social-share {
-    text-align: center;
-    margin-top: 2rem;
-    padding-top: 1.5rem;
-    border-top: 1px solid var(--suno-border);
-}
-
-.social-share p {
-    color: var(--suno-text-light);
-    margin-bottom: 1rem;
-}
-
-.share-buttons {
-    display: flex;
-    gap: 1rem;
-    justify-content: center;
-    flex-wrap: wrap;
-}
-
-.share-btn {
-    padding: 0.5rem 1rem;
-    border: none;
-    border-radius: 6px;
-    font-size: 0.9rem;
-    cursor: pointer;
-    transition: var(--suno-transition);
-}
-
-.share-btn.twitter {
-    background: #1da1f2;
-    color: white;
-}
-
-.share-btn.facebook {
-    background: #4267b2;
-    color: white;
-}
-
-.share-btn.copy {
-    background: var(--suno-text-light);
-    color: white;
-}
-
-.share-btn:hover {
-    transform: translateY(-2px);
-    opacity: 0.9;
-}
-
-/* Playlist */
+/* Playlist améliorée */
 .suno-playlist {
     max-width: 800px;
     margin: 0 auto;
@@ -315,6 +353,20 @@
     font-weight: 700;
     margin-bottom: 2rem;
     text-align: center;
+    position: relative;
+}
+
+.suno-playlist h3::after {
+    content: "🛡️ v1.10.4";
+    position: absolute;
+    top: -8px;
+    right: 0;
+    background: var(--suno-protection);
+    color: white;
+    padding: 0.2rem 0.6rem;
+    border-radius: 10px;
+    font-size: 0.7rem;
+    font-weight: 500;
 }
 
 .suno-track {
@@ -325,6 +377,7 @@
     margin-bottom: 1.5rem;
     box-shadow: var(--suno-shadow);
     transition: var(--suno-transition);
+    position: relative;
 }
 
 .suno-track:hover {
@@ -344,102 +397,87 @@
     margin-bottom: 1rem;
 }
 
-.track-style,
-.track-date {
-    display: inline-block;
-    padding: 0.25rem 0.75rem;
-    background: var(--suno-background);
-    border-radius: 16px;
+.track-status {
+    position: absolute;
+    top: 1rem;
+    right: 1rem;
+    padding: 0.3rem 0.8rem;
+    border-radius: 12px;
     font-size: 0.8rem;
-    color: var(--suno-text-light);
-    margin-right: 0.5rem;
-    margin-bottom: 0.5rem;
-}
-
-.track-style {
-    background: linear-gradient(135deg, var(--suno-primary), var(--suno-primary-dark));
-    color: white;
-}
-
-.track-player {
-    margin: 1rem 0;
-}
-
-.track-player audio {
-    width: 100%;
-    border-radius: 6px;
-}
-
-.track-image {
-    text-align: center;
-    margin-top: 1rem;
-}
-
-.track-image img {
-    max-width: 200px;
-    border-radius: 8px;
-    box-shadow: var(--suno-shadow);
-}
-
-/* Suggestions de prompts */
-.prompt-suggestions {
-    margin-top: 1rem;
-}
-
-.prompt-suggestions p {
-    color: var(--suno-text-light);
-    font-size: 0.9rem;
-    margin-bottom: 0.75rem;
-}
-
-.suggestions-list {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0.5rem;
-}
-
-.suggestion-btn {
-    padding: 0.5rem 1rem;
-    background: var(--suno-background);
-    border: 1px solid var(--suno-border);
-    border-radius: 20px;
-    font-size: 0.8rem;
-    cursor: pointer;
-    transition: var(--suno-transition);
-    color: var(--suno-text);
-}
-
-.suggestion-btn:hover {
-    background: var(--suno-primary);
-    color: white;
-    border-color: var(--suno-primary);
-}
-
-/* Compteur de caractères */
-.char-counter {
-    font-size: 0.8rem;
-    color: var(--suno-text-light);
-    text-align: right;
-    margin-top: 0.25rem;
-}
-
-.char-counter.over-limit {
-    color: var(--suno-error);
     font-weight: 600;
 }
 
-/* Messages d'erreur */
-.error-content {
-    text-align: center;
-    color: var(--suno-error);
+.track-status.pending {
+    background: #fef3c7;
+    color: #92400e;
 }
 
-.error-content h4 {
-    font-size: 1.3rem;
-    margin-bottom: 1rem;
+.track-status.completed {
+    background: var(--suno-protection-bg);
+    color: #166534;
 }
 
-/* Animations */
+.track-status.protected {
+    background: #ddd6fe;
+    color: #6b21a8;
+}
+
+/* Messages d'information v1.10.4 */
+.info-message {
+    background: #f0f9ff;
+    border: 2px solid #0ea5e9;
+    border-radius: 8px;
+    padding: 1rem;
+    margin: 1rem 0;
+    color: #0c4a6e;
+    display: flex;
+    align-items: flex-start;
+    gap: 0.75rem;
+}
+
+.info-message::before {
+    content: "ℹ️";
+    font-size: 1.2rem;
+    margin-top: 0.1rem;
+}
+
+.success-message {
+    background: var(--suno-protection-bg);
+    border: 2px solid var(--suno-protection-border);
+    border-radius: 8px;
+    padding: 1rem;
+    margin: 1rem 0;
+    color: #166534;
+    display: flex;
+    align-items: flex-start;
+    gap: 0.75rem;
+}
+
+.success-message::before {
+    content: "✅";
+    font-size: 1.2rem;
+    margin-top: 0.1rem;
+}
+
+.error-message {
+    background: #fef2f2;
+    border: 2px solid #fecaca;
+    border-radius: 8px;
+    padding: 1rem;
+    margin: 1rem 0;
+    color: #dc2626;
+    display: flex;
+    align-items: flex-start;
+    gap: 0.75rem;
+}
+
+.error-message::before {
+    content: "❌";
+    font-size: 1.2rem;
+    margin-top: 0.1rem;
+}
+
+/* Animations améliorées */
 @keyframes fadeIn {
     from {
         opacity: 0;
@@ -451,6 +489,15 @@
     }
 }
 
+@keyframes pulse {
+    0%, 100% {
+        transform: scale(1);
+    }
+    50% {
+        transform: scale(1.05);
+    }
+}
+
 .suno-container,
 .suno-status,
 .suno-result,
@@ -458,7 +505,13 @@
     animation: fadeIn 0.5s ease-out;
 }
 
-/* Mode sombre (optionnel) */
+.protection-alert,
+.counter-warning,
+.counter-danger {
+    animation: pulse 2s ease-in-out infinite;
+}
+
+/* Mode sombre amélioré */
 @media (prefers-color-scheme: dark) {
     :root {
         --suno-background: #0f172a;
@@ -466,29 +519,46 @@
         --suno-text: #f1f5f9;
         --suno-text-light: #94a3b8;
         --suno-border: #334155;
+        --suno-protection-bg: #064e3b;
+        --suno-protection-border: #047857;
+    }
+    
+    .suno-container::before {
+        background: var(--suno-protection);
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3);
     }
 }
 
-/* Responsive */
+/* Responsive amélioré */
 @media (max-width: 768px) {
     .suno-container {
         padding: 1.5rem;
         margin: 1rem;
     }
     
-    .result-actions {
-        flex-direction: column;
-        align-items: center;
+    .suno-container::before {
+        right: 15px;
+        font-size: 0.7rem;
+        padding: 0.2rem 0.6rem;
     }
     
-    .share-buttons {
-        flex-direction: column;
-        align-items: center;
+    .suno-playlist h3::after {
+        position: static;
+        display: block;
+        margin-top: 0.5rem;
+        font-size: 0.8rem;
     }
     
-    .share-btn {
-        width: 100%;
-        max-width: 200px;
+    .track-status {
+        position: static;
+        display: inline-block;
+        margin-bottom: 1rem;
+    }
+    
+    .protection-counter {
+        flex-direction: column;
+        gap: 0.5rem;
+        text-align: center;
     }
 }
 
@@ -506,6 +576,11 @@
     .form-group textarea,
     .form-group select {
         padding: 0.6rem;
+        font-size: 0.9rem;
+    }
+    
+    .suno-btn {
+        padding: 0.8rem 1.5rem;
         font-size: 0.9rem;
     }
 }
