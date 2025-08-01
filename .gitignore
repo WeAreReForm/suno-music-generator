@@ -11,6 +11,7 @@
 .Trashes
 ehthumbs.db
 Thumbs.db
+Icon?
 
 # ====== IDE / ÉDITEURS ======
 .vscode/
@@ -18,6 +19,8 @@ Thumbs.db
 *.swp
 *.swo
 *~
+.sublime-project
+.sublime-workspace
 
 # ====== WORDPRESS ======
 wp-config.php
@@ -36,12 +39,14 @@ sitemap.xml.gz
 *.log
 error_log
 debug.log
+php_errors.log
 
 # ====== NODE.JS ======
 node_modules/
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
+package-lock.json
 
 # ====== COMPOSER ======
 vendor/
@@ -61,12 +66,18 @@ composer.lock
 *.key
 *.pem
 api-keys.txt
+.htaccess.backup
 
 # ====== SPÉCIFIQUE AU PLUGIN ======
 # Logs de debug du plugin
 suno-debug.log
 music-generation-logs/
 temp-audio-files/
+
+# Tests et développement
+tests/coverage/
+phpunit.xml
+.phpunit.result.cache
 
 # ====== ARCHIVES ======
 *.zip
@@ -76,3 +87,9 @@ temp-audio-files/
 
 # ====== DOCUMENTATION GÉNÉRÉE ======
 docs/generated/
+api-docs/generated/
+
+# ====== BUILDS ======
+dist/
+build/
+public/build/
