@@ -5,6 +5,7 @@
 jQuery(document).ready(function($) {
     let currentTaskId = null;
     let statusCheckInterval = null;
+    let checkCount = 0;
     
     // Soumission du formulaire
     $('#music-generation-form').on('submit', function(e) {
@@ -33,13 +34,19 @@ jQuery(document).ready(function($) {
         // Désactiver le formulaire
         toggleFormState(false);
         
-        // Appel AJAX
-        $.post(suno_ajax.ajax_url, formData)
-            .done(function(response) {
+        // Appel AJAX amélioré pour éviter l'erreur asynchrone
+        $.ajax({
+            url: suno_ajax.ajax_url,
+            type: 'POST',
+            data: formData,
+            timeout: 60000, // 60 secondes
+            success: function(response) {
+                console.log('Réponse reçue:', response);
                 if (response.success) {
                     currentTaskId = response.data.task_id;
                     updateStatusText('Génération démarrée...');
                     updateProgress(25);
+                    checkCount = 0;
                     
                     // Commencer à vérifier le statut
                     startStatusCheck();
@@ -48,12 +55,15 @@ jQuery(document).ready(function($) {
                     hideGenerationStatus();
                     toggleFormState(true);
                 }
-            })
-            .fail(function() {
-                showError('Erreur de connexion');
+            },
+            error: function(xhr, status, error) {
+                console.error('Erreur AJAX:', status, error);
+                console.error('Réponse:', xhr.responseText);
+                showError('Erreur de connexion: ' + error);
                 hideGenerationStatus();
                 toggleFormState(true);
-            });
+            }
+        });
     });
     
     function startStatusCheck() {
@@ -64,7 +74,7 @@ jQuery(document).ready(function($) {
         
         statusCheckInterval = setInterval(function() {
             checkMusicStatus();
-        }, 3000); // Vérifier toutes les 3 secondes
+        }, suno_ajax.check_interval || 5000); // 5 secondes par défaut
     }
     
     function checkMusicStatus() {
@@ -73,46 +83,59 @@ jQuery(document).ready(function($) {
             return;
         }
         
-        $.post(suno_ajax.ajax_url, {
-            action: 'check_music_status',
-            nonce: suno_ajax.nonce,
-            task_id: currentTaskId
-        })
-        .done(function(response) {
-            if (response.success) {
-                const status = response.data.status;
-                
-                switch(status) {
-                    case 'processing':
-                    case 'queued':
-                        updateStatusText('Génération en cours...');
-                        updateProgress(75);
-                        break;
-                        
-                    case 'completed':
-                        updateStatusText('Terminé !');
-                        updateProgress(100);
-                        setTimeout(() => {
-                            showResult(response.data);
+        checkCount++;
+        $('#check-count').text(checkCount);
+        
+        $.ajax({
+            url: suno_ajax.ajax_url,
+            type: 'POST',
+            data: {
+                action: 'check_music_status',
+                nonce: suno_ajax.nonce,
+                task_id: currentTaskId,
+                check_count: checkCount
+            },
+            timeout: 30000, // 30 secondes
+            success: function(response) {
+                console.log('Status check response:', response);
+                if (response.success) {
+                    const status = response.data.status;
+                    
+                    switch(status) {
+                        case 'processing':
+                        case 'queued':
+                            updateStatusText('Génération en cours...');
+                            updateProgress(75);
+                            break;
+                            
+                        case 'completed':
+                            updateStatusText('Terminé !');
+                            updateProgress(100);
+                            setTimeout(() => {
+                                showResult(response.data);
+                                stopStatusCheck();
+                            }, 1000);
+                            break;
+                            
+                        case 'timeout':
+                            showError('La génération a pris trop de temps. Vérifiez plus tard avec [suno_force_check].');
                             stopStatusCheck();
-                        }, 1000);
-                        break;
-                        
-                    case 'failed':
-                        showError('La génération a échoué');
-                        stopStatusCheck();
-                        break;
-                        
-                    default:
-                        updateStatusText('Statut: ' + status);
-                        break;
+                            break;
+                            
+                        case 'failed':
+                            showError('La génération a échoué');
+                            stopStatusCheck();
+                            break;
+                            
+                        default:
+                            updateStatusText('Statut: ' + status);
+                            break;
+                    }
                 }
-            } else {
-                console.log('Erreur de vérification:', response.data);
+            },
+            error: function(xhr, status, error) {
+                console.error('Erreur de vérification:', status, error);
             }
-        })
-        .fail(function() {
-            console.log('Erreur de connexion lors de la vérification');
         });
     }
     
@@ -124,6 +147,7 @@ jQuery(document).ready(function($) {
         hideGenerationStatus();
         toggleFormState(true);
         currentTaskId = null;
+        checkCount = 0;
     }
     
     function showGenerationStatus() {
