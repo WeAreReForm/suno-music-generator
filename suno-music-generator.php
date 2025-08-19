@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Suno Music Generator
  * Description: Générateur de musique IA avec Suno via formulaire WordPress
- * Version: 1.6.1 (Récupération optimisée des URLs)
+ * Version: 1.7.0 (Timeout étendu + Debug amélioré)
  * Author: Assistant IA
  */
 
@@ -14,9 +14,10 @@ class SunoMusicGenerator {
     
     private $api_key;
     private $api_base_url = 'https://apibox.erweima.ai';
+    private $max_status_checks = 60; // Augmenté de 20 à 60 (5 minutes)
     
     public function __construct() {
-        error_log('=== SUNO PLUGIN v1.6.1 - RÉCUPÉRATION OPTIMISÉE ===');
+        error_log('=== SUNO PLUGIN v1.7.0 - TIMEOUT ÉTENDU ===');
         
         add_action('init', array($this, 'init'));
         add_action('wp_enqueue_scripts', array($this, 'enqueue_scripts'));
@@ -28,6 +29,7 @@ class SunoMusicGenerator {
         add_shortcode('suno_clear_database', array($this, 'clear_database_shortcode'));
         add_shortcode('suno_force_check', array($this, 'force_check_status'));
         add_shortcode('suno_check_task', array($this, 'check_specific_task'));
+        add_shortcode('suno_test_response', array($this, 'test_api_response'));
         
         add_action('wp_ajax_generate_music', array($this, 'ajax_generate_music'));
         add_action('wp_ajax_nopriv_generate_music', array($this, 'ajax_generate_music'));
@@ -63,6 +65,7 @@ class SunoMusicGenerator {
             video_url varchar(500) DEFAULT '',
             image_url varchar(500) DEFAULT '',
             duration int DEFAULT 0,
+            api_response text DEFAULT '',
             created_at datetime DEFAULT CURRENT_TIMESTAMP,
             completed_at datetime DEFAULT NULL,
             PRIMARY KEY (id),
@@ -93,14 +96,14 @@ class SunoMusicGenerator {
         $api_key = get_option('suno_api_key', '');
         ?>
         <div class="wrap">
-            <h1>Configuration Suno Music Generator v1.6.1</h1>
+            <h1>Configuration Suno Music Generator v1.7.0</h1>
             
             <div style="background: #d4edda; padding: 15px; border-radius: 5px; color: #155724; margin: 15px 0;">
-                <strong>🎯 VERSION 1.6.1 - RÉCUPÉRATION OPTIMISÉE</strong><br>
-                ✅ Meilleure détection des URLs dans la réponse API<br>
-                ✅ Support de tous les formats de réponse connus<br>
-                ✅ Nouveau shortcode [suno_check_task] pour debug<br>
-                ✅ Logs détaillés pour diagnostic
+                <strong>🎯 VERSION 1.7.0 - TIMEOUT ÉTENDU</strong><br>
+                ✅ Limite augmentée à 60 vérifications (5 minutes)<br>
+                ✅ Sauvegarde des réponses API pour debug<br>
+                ✅ Nouveau shortcode [suno_test_response] pour tester<br>
+                ✅ Meilleur suivi des erreurs
             </div>
             
             <form method="post">
@@ -124,6 +127,7 @@ class SunoMusicGenerator {
                 <li><code>[suno_debug]</code> - Informations de debug</li>
                 <li><code>[suno_force_check]</code> - Forcer la vérification des générations</li>
                 <li><code>[suno_check_task task_id="XXX"]</code> - Vérifier un task_id spécifique</li>
+                <li><code>[suno_test_response]</code> - Tester la réponse API</li>
                 <li><code>[suno_clear_database]</code> - Vider la base de données</li>
             </ul>
         </div>
@@ -132,13 +136,13 @@ class SunoMusicGenerator {
     
     public function enqueue_scripts() {
         wp_enqueue_script('jquery');
-        wp_enqueue_script('suno-music-js', plugin_dir_url(__FILE__) . 'assets/suno-music.js', array('jquery'), '1.6.1', true);
-        wp_enqueue_style('suno-music-css', plugin_dir_url(__FILE__) . 'assets/suno-music.css', array(), '1.6.1');
+        wp_enqueue_script('suno-music-js', plugin_dir_url(__FILE__) . 'assets/suno-music.js', array('jquery'), '1.7.0', true);
+        wp_enqueue_style('suno-music-css', plugin_dir_url(__FILE__) . 'assets/suno-music.css', array(), '1.7.0');
         
         wp_localize_script('suno-music-js', 'suno_ajax', array(
             'ajax_url' => admin_url('admin-ajax.php'),
             'nonce' => wp_create_nonce('suno_music_nonce'),
-            'max_checks' => 20,
+            'max_checks' => $this->max_status_checks,
             'check_interval' => 5000
         ));
     }
@@ -147,10 +151,10 @@ class SunoMusicGenerator {
         ob_start();
         ?>
         <div id="suno-music-form" class="suno-container">
-            <h3>🎵 Créer votre chanson avec l'IA (v1.6.1)</h3>
+            <h3>🎵 Créer votre chanson avec l'IA (v1.7.0)</h3>
             
             <div style="background: #d4edda; padding: 10px; border-radius: 5px; margin: 15px 0; color: #155724;">
-                <strong>✅ Version optimisée :</strong> Récupération améliorée des URLs audio
+                <strong>✅ Timeout étendu :</strong> Jusqu'à 5 minutes de génération supportées
             </div>
             
             <form id="music-generation-form">
@@ -213,7 +217,9 @@ class SunoMusicGenerator {
                         <div class="progress-fill"></div>
                     </div>
                     <div style="font-size: 12px; color: #666; margin-top: 10px;">
-                        Vérifications : <span id="check-count">0</span>/20 (protection anti-boucle)
+                        Vérifications : <span id="check-count">0</span>/<?php echo $this->max_status_checks; ?>
+                        <br>
+                        <small>La génération peut prendre jusqu'à 5 minutes</small>
                     </div>
                 </div>
             </div>
@@ -227,7 +233,7 @@ class SunoMusicGenerator {
     }
     
     public function ajax_generate_music() {
-        error_log('=== GENERATE MUSIC v1.6.1 ===');
+        error_log('=== GENERATE MUSIC v1.7.0 ===');
         
         check_ajax_referer('suno_music_nonce', 'nonce');
         
@@ -248,10 +254,10 @@ class SunoMusicGenerator {
         // Générer un ID unique pour cette génération
         $generation_id = 'wp_' . uniqid() . '_' . time();
         
-        // URL de callback (au cas où l'API l'utilise)
+        // URL de callback
         $callback_url = admin_url('admin-ajax.php?action=suno_callback&generation_id=' . $generation_id);
         
-        // Données API avec callBackUrl
+        // Données API
         $api_data = array(
             'prompt' => $prompt,
             'customMode' => false,
@@ -267,7 +273,7 @@ class SunoMusicGenerator {
             if (!empty($lyrics)) $api_data['lyric'] = $lyrics;
         }
         
-        error_log('API Data: ' . json_encode($api_data));
+        error_log('API Request Data: ' . json_encode($api_data));
         
         $response = wp_remote_post($this->api_base_url . '/api/v1/generate', array(
             'headers' => array(
@@ -287,7 +293,7 @@ class SunoMusicGenerator {
         $body = wp_remote_retrieve_body($response);
         
         error_log('API Response Code: ' . $status_code);
-        error_log('API Response: ' . $body);
+        error_log('API Response Body: ' . $body);
         
         if ($status_code === 401) {
             wp_send_json_error('Clé API invalide. Vérifiez votre clé dans Réglages > Suno Music.');
@@ -310,10 +316,9 @@ class SunoMusicGenerator {
             return;
         }
         
-        // Extraire le task_id de la réponse
+        // Extraire le task_id
         $task_id = null;
         
-        // Chercher dans différents emplacements possibles
         if (isset($data['data']['taskId'])) {
             $task_id = $data['data']['taskId'];
         } elseif (isset($data['data']['task_id'])) {
@@ -327,14 +332,13 @@ class SunoMusicGenerator {
         }
         
         if (!$task_id) {
-            // Si pas de task_id, utiliser notre generation_id
             $task_id = $generation_id;
             error_log('No task_id from API, using generation_id: ' . $task_id);
         } else {
             error_log('Task ID from API: ' . $task_id);
         }
         
-        // Sauvegarder en base de données
+        // Sauvegarder en base de données avec la réponse complète
         global $wpdb;
         $table_name = $wpdb->prefix . 'suno_generations';
         
@@ -346,6 +350,7 @@ class SunoMusicGenerator {
             'title' => $title,
             'lyrics' => $lyrics,
             'status' => 'pending',
+            'api_response' => $body, // Sauvegarder la réponse complète
             'created_at' => current_time('mysql')
         ));
         
@@ -356,12 +361,13 @@ class SunoMusicGenerator {
         
         wp_send_json_success(array(
             'task_id' => $task_id,
-            'message' => 'Génération démarrée ! Vérification automatique du statut...',
-            'callback_url' => $callback_url
+            'message' => 'Génération démarrée ! Patience, cela peut prendre jusqu\'à 5 minutes...',
+            'callback_url' => $callback_url,
+            'max_checks' => $this->max_status_checks
         ));
     }
     
-    // FONCTION AMÉLIORÉE : Extraction des URLs depuis différents formats de réponse
+    // Fonction améliorée d'extraction des URLs
     private function extract_urls_from_response($data) {
         $urls = array(
             'audio_url' => '',
@@ -369,71 +375,53 @@ class SunoMusicGenerator {
             'image_url' => ''
         );
         
-        // Log pour debug
-        error_log('=== EXTRACTING URLs FROM RESPONSE ===');
-        error_log('Data structure: ' . json_encode($data));
+        error_log('=== EXTRACTING URLs v1.7.0 ===');
+        error_log('Full response structure: ' . json_encode($data));
         
-        // Si c'est un tableau de données
-        if (isset($data['data']) && is_array($data['data']) && !empty($data['data'])) {
-            // Prendre le premier élément si c'est un tableau
-            $music_data = is_array($data['data'][0]) ? $data['data'][0] : $data['data'];
-            
-            // Chercher audio_url dans différents formats possibles
-            $audio_fields = array(
-                'audio_url', 'audioUrl', 'audio', 'url', 'music_url', 'musicUrl',
-                'mp3_url', 'mp3Url', 'song_url', 'songUrl', 'track_url', 'trackUrl',
-                'file_url', 'fileUrl', 'download_url', 'downloadUrl'
-            );
-            
-            foreach ($audio_fields as $field) {
-                if (isset($music_data[$field]) && !empty($music_data[$field])) {
-                    $urls['audio_url'] = $music_data[$field];
-                    error_log('Found audio URL in field: ' . $field . ' = ' . $urls['audio_url']);
-                    break;
+        // Fonction récursive pour chercher les URLs dans toute la structure
+        $find_urls = function($obj) use (&$find_urls, &$urls) {
+            if (is_array($obj)) {
+                foreach ($obj as $key => $value) {
+                    // Chercher les clés audio
+                    if (in_array($key, ['audio_url', 'audioUrl', 'audio', 'url', 'music_url', 
+                                       'musicUrl', 'mp3_url', 'mp3Url', 'song_url', 'songUrl', 
+                                       'track_url', 'trackUrl', 'file_url', 'fileUrl', 
+                                       'download_url', 'downloadUrl']) && 
+                        is_string($value) && !empty($value) && empty($urls['audio_url'])) {
+                        $urls['audio_url'] = $value;
+                        error_log('Found audio URL: ' . $value);
+                    }
+                    
+                    // Chercher les clés vidéo
+                    if (in_array($key, ['video_url', 'videoUrl', 'video', 'mp4_url', 'mp4Url']) && 
+                        is_string($value) && !empty($value) && empty($urls['video_url'])) {
+                        $urls['video_url'] = $value;
+                    }
+                    
+                    // Chercher les clés image
+                    if (in_array($key, ['image_url', 'imageUrl', 'image', 'cover_url', 
+                                       'coverUrl', 'cover', 'thumbnail', 'thumbnailUrl']) && 
+                        is_string($value) && !empty($value) && empty($urls['image_url'])) {
+                        $urls['image_url'] = $value;
+                    }
+                    
+                    // Récursion
+                    if (is_array($value)) {
+                        $find_urls($value);
+                    }
                 }
             }
-            
-            // Chercher video_url
-            $video_fields = array('video_url', 'videoUrl', 'video', 'mp4_url', 'mp4Url');
-            foreach ($video_fields as $field) {
-                if (isset($music_data[$field]) && !empty($music_data[$field])) {
-                    $urls['video_url'] = $music_data[$field];
-                    break;
-                }
-            }
-            
-            // Chercher image_url
-            $image_fields = array('image_url', 'imageUrl', 'image', 'cover_url', 'coverUrl', 'cover', 'thumbnail', 'thumbnailUrl');
-            foreach ($image_fields as $field) {
-                if (isset($music_data[$field]) && !empty($music_data[$field])) {
-                    $urls['image_url'] = $music_data[$field];
-                    break;
-                }
-            }
-            
-            // Si toujours pas d'audio_url, chercher dans d'autres structures possibles
-            if (empty($urls['audio_url'])) {
-                // Peut-être que les URLs sont dans un sous-objet
-                if (isset($music_data['urls'])) {
-                    $urls['audio_url'] = $music_data['urls']['audio'] ?? $music_data['urls']['mp3'] ?? '';
-                    $urls['video_url'] = $music_data['urls']['video'] ?? $music_data['urls']['mp4'] ?? '';
-                }
-                
-                // Ou peut-être dans 'files'
-                if (isset($music_data['files'])) {
-                    $urls['audio_url'] = $music_data['files']['audio'] ?? $music_data['files']['mp3'] ?? '';
-                    $urls['video_url'] = $music_data['files']['video'] ?? $music_data['files']['mp4'] ?? '';
-                }
-            }
-        }
+        };
+        
+        $find_urls($data);
         
         error_log('Extracted URLs: ' . json_encode($urls));
         return $urls;
     }
     
-    // Vérification active du statut (version améliorée)
+    // Vérification du statut améliorée
     public function ajax_check_music_status() {
-        error_log('=== CHECK MUSIC STATUS v1.6.1 ===');
+        error_log('=== CHECK MUSIC STATUS v1.7.0 ===');
         
         check_ajax_referer('suno_music_nonce', 'nonce');
         
@@ -444,9 +432,11 @@ class SunoMusicGenerator {
             wp_send_json_error('Task ID requis');
         }
         
-        // Protection anti-boucle
-        if ($check_count >= 20) {
-            error_log('Anti-loop: Maximum checks reached for task: ' . $task_id);
+        error_log('Checking task: ' . $task_id . ' (attempt ' . $check_count . '/' . $this->max_status_checks . ')');
+        
+        // Protection anti-boucle avec limite augmentée
+        if ($check_count >= $this->max_status_checks) {
+            error_log('Maximum checks reached for task: ' . $task_id);
             
             global $wpdb;
             $table_name = $wpdb->prefix . 'suno_generations';
@@ -457,7 +447,7 @@ class SunoMusicGenerator {
             
             wp_send_json_success(array(
                 'status' => 'timeout',
-                'message' => 'La génération prend plus de temps que prévu. Réessayez plus tard.',
+                'message' => 'La génération prend plus de temps que prévu. Utilisez [suno_check_task task_id="' . $task_id . '"] pour vérifier manuellement.',
                 'check_count' => $check_count
             ));
             return;
@@ -483,12 +473,13 @@ class SunoMusicGenerator {
             return;
         }
         
-        // VÉRIFICATION VIA L'API - Essayer différents endpoints
+        // Vérification via l'API
         $endpoints = array(
             '/api/v1/music/' . $task_id,
             '/api/v1/status/' . $task_id,
             '/api/v1/task/' . $task_id,
-            '/api/v1/get?ids=' . $task_id
+            '/api/v1/get?ids=' . $task_id,
+            '/api/v1/query?ids=' . $task_id
         );
         
         foreach ($endpoints as $endpoint) {
@@ -507,15 +498,19 @@ class SunoMusicGenerator {
                 $status_code = wp_remote_retrieve_response_code($response);
                 $body = wp_remote_retrieve_body($response);
                 
-                error_log('Response code: ' . $status_code);
-                
-                if ($status_code === 200) {
+                if ($status_code === 200 && !empty($body)) {
                     $data = json_decode($body, true);
                     
                     if ($data) {
                         error_log('API Response: ' . json_encode($data));
                         
-                        // Extraire les URLs avec la nouvelle fonction
+                        // Sauvegarder la réponse pour debug
+                        $wpdb->update($table_name, 
+                            array('api_response' => $body), 
+                            array('task_id' => $task_id)
+                        );
+                        
+                        // Extraire les URLs
                         $urls = $this->extract_urls_from_response($data);
                         
                         if (!empty($urls['audio_url'])) {
@@ -547,13 +542,76 @@ class SunoMusicGenerator {
         // Toujours en cours
         wp_send_json_success(array(
             'status' => 'processing',
-            'message' => 'Génération en cours...',
+            'message' => 'Génération en cours... (tentative ' . ($check_count + 1) . '/' . $this->max_status_checks . ')',
             'check_count' => $check_count + 1,
-            'max_checks' => 20
+            'max_checks' => $this->max_status_checks
         ));
     }
     
-    // Nouveau shortcode pour vérifier un task_id spécifique
+    // Nouveau shortcode pour tester la réponse API
+    public function test_api_response($atts) {
+        if (!current_user_can('manage_options')) {
+            return '<div style="padding: 15px; background: #f8d7da; border-radius: 5px; color: #721c24;">❌ Accès refusé</div>';
+        }
+        
+        global $wpdb;
+        $table_name = $wpdb->prefix . 'suno_generations';
+        
+        $latest = $wpdb->get_row("SELECT * FROM $table_name ORDER BY created_at DESC LIMIT 1");
+        
+        if (!$latest || empty($latest->api_response)) {
+            return '<div style="padding: 15px; background: #f8d7da; border-radius: 5px;">
+                ❌ Aucune réponse API sauvegardée. Générez d\'abord une chanson.
+            </div>';
+        }
+        
+        ob_start();
+        ?>
+        <div style="background: #f9f9f9; padding: 20px; border-radius: 5px; margin: 20px 0;">
+            <h3>🔍 Dernière réponse API (v1.7.0)</h3>
+            
+            <div style="background: #fff; padding: 15px; border-radius: 5px; margin: 15px 0;">
+                <h4>Génération : <?php echo esc_html($latest->title ?: $latest->prompt); ?></h4>
+                <p><strong>Task ID :</strong> <?php echo esc_html($latest->task_id); ?></p>
+                <p><strong>Statut :</strong> <?php echo esc_html($latest->status); ?></p>
+                <p><strong>Date :</strong> <?php echo esc_html($latest->created_at); ?></p>
+            </div>
+            
+            <details open>
+                <summary style="cursor: pointer; padding: 10px; background: #e9ecef; border-radius: 5px;">
+                    📋 Réponse API complète
+                </summary>
+                <pre style="background: #fff; padding: 15px; border: 1px solid #ddd; margin-top: 10px; overflow: auto; font-size: 12px;">
+<?php echo esc_html(json_encode(json_decode($latest->api_response), JSON_PRETTY_PRINT)); ?>
+                </pre>
+            </details>
+            
+            <?php
+            $data = json_decode($latest->api_response, true);
+            if ($data) {
+                $urls = $this->extract_urls_from_response($data);
+                
+                if (!empty($urls['audio_url']) || !empty($urls['video_url']) || !empty($urls['image_url'])) {
+                    echo '<div style="background: #d4edda; padding: 15px; border-radius: 5px; margin: 15px 0; color: #155724;">';
+                    echo '<strong>✅ URLs trouvées dans la réponse :</strong><br>';
+                    if ($urls['audio_url']) echo 'Audio : <code>' . esc_html($urls['audio_url']) . '</code><br>';
+                    if ($urls['video_url']) echo 'Vidéo : <code>' . esc_html($urls['video_url']) . '</code><br>';
+                    if ($urls['image_url']) echo 'Image : <code>' . esc_html($urls['image_url']) . '</code><br>';
+                    echo '</div>';
+                } else {
+                    echo '<div style="background: #f8d7da; padding: 15px; border-radius: 5px; margin: 15px 0; color: #721c24;">';
+                    echo '<strong>❌ Aucune URL trouvée dans cette réponse</strong><br>';
+                    echo 'L\'API n\'a pas encore retourné les fichiers générés.';
+                    echo '</div>';
+                }
+            }
+            ?>
+        </div>
+        <?php
+        return ob_get_clean();
+    }
+    
+    // Autres méthodes inchangées...
     public function check_specific_task($atts) {
         if (!current_user_can('manage_options')) {
             return '<div style="padding: 15px; background: #f8d7da; border-radius: 5px; color: #721c24;">❌ Accès refusé</div>';
@@ -582,7 +640,8 @@ class SunoMusicGenerator {
                 '/api/v1/music/' . $task_id => 'Music endpoint',
                 '/api/v1/status/' . $task_id => 'Status endpoint',
                 '/api/v1/task/' . $task_id => 'Task endpoint',
-                '/api/v1/get?ids=' . $task_id => 'Get endpoint'
+                '/api/v1/get?ids=' . $task_id => 'Get endpoint',
+                '/api/v1/query?ids=' . $task_id => 'Query endpoint'
             );
             
             $found = false;
@@ -644,7 +703,8 @@ class SunoMusicGenerator {
                                     'completed_at' => current_time('mysql'),
                                     'audio_url' => $urls['audio_url'],
                                     'video_url' => $urls['video_url'],
-                                    'image_url' => $urls['image_url']
+                                    'image_url' => $urls['image_url'],
+                                    'api_response' => $body
                                 ), array('task_id' => $task_id));
                                 
                                 echo '<p style="color: green;">✅ Base de données mise à jour !</p>';
@@ -670,96 +730,6 @@ class SunoMusicGenerator {
         return ob_get_clean();
     }
     
-    // Force check amélioré
-    public function force_check_status($atts) {
-        if (!current_user_can('manage_options')) {
-            return '<div style="padding: 15px; background: #f8d7da; border-radius: 5px; color: #721c24;">❌ Accès refusé</div>';
-        }
-        
-        global $wpdb;
-        $table_name = $wpdb->prefix . 'suno_generations';
-        
-        $pending = $wpdb->get_results("SELECT * FROM $table_name WHERE status = 'pending'");
-        
-        if (empty($pending)) {
-            return '<div style="background: #d4edda; padding: 15px; border-radius: 5px; color: #155724;">
-                ✅ Aucune génération en attente.
-            </div>';
-        }
-        
-        $output = '<div style="background: #f9f9f9; padding: 20px; border-radius: 5px;">';
-        $output .= '<h3>🔄 Vérification forcée des générations en cours (v1.6.1)</h3>';
-        
-        foreach ($pending as $generation) {
-            $output .= '<div style="background: #fff; padding: 15px; border-radius: 5px; margin: 15px 0;">';
-            $output .= '<h4>' . esc_html($generation->title ?: $generation->prompt) . '</h4>';
-            $output .= '<p><small>Task ID: ' . esc_html($generation->task_id) . '</small></p>';
-            
-            // Essayer plusieurs endpoints
-            $endpoints = array(
-                '/api/v1/music/' . $generation->task_id,
-                '/api/v1/status/' . $generation->task_id,
-                '/api/v1/get?ids=' . $generation->task_id
-            );
-            
-            $found = false;
-            
-            foreach ($endpoints as $endpoint) {
-                if ($found) break;
-                
-                $api_url = $this->api_base_url . $endpoint;
-                
-                $response = wp_remote_get($api_url, array(
-                    'headers' => array(
-                        'Authorization' => 'Bearer ' . $this->api_key,
-                        'Content-Type' => 'application/json'
-                    ),
-                    'timeout' => 15
-                ));
-                
-                if (!is_wp_error($response) && wp_remote_retrieve_response_code($response) === 200) {
-                    $body = wp_remote_retrieve_body($response);
-                    $data = json_decode($body, true);
-                    
-                    if ($data) {
-                        $urls = $this->extract_urls_from_response($data);
-                        
-                        if (!empty($urls['audio_url'])) {
-                            $found = true;
-                            
-                            $update_data = array(
-                                'status' => 'completed',
-                                'completed_at' => current_time('mysql'),
-                                'audio_url' => $urls['audio_url'],
-                                'video_url' => $urls['video_url'],
-                                'image_url' => $urls['image_url']
-                            );
-                            
-                            $wpdb->update($table_name, $update_data, array('id' => $generation->id));
-                            
-                            $output .= '<p style="color: green;">✅ Mis à jour ! Audio trouvé.</p>';
-                            $output .= '<audio controls style="width: 100%; margin-top: 10px;">';
-                            $output .= '<source src="' . esc_url($urls['audio_url']) . '" type="audio/mpeg">';
-                            $output .= '</audio>';
-                        }
-                    }
-                }
-            }
-            
-            if (!$found) {
-                $output .= '<p style="color: orange;">⏳ Toujours en cours de génération...</p>';
-            }
-            
-            $output .= '</div>';
-        }
-        
-        $output .= '<p><a href="' . get_permalink() . '" style="background: #007cba; color: white; padding: 10px 20px; border-radius: 5px; text-decoration: none; display: inline-block; margin-top: 10px;">🔄 Rafraîchir</a></p>';
-        $output .= '</div>';
-        
-        return $output;
-    }
-    
-    // Autres méthodes inchangées...
     public function render_music_player($atts) {
         $atts = shortcode_atts(array(
             'user_id' => get_current_user_id(),
@@ -779,7 +749,7 @@ class SunoMusicGenerator {
             return '<div style="background: #fff3cd; padding: 15px; border-radius: 5px;">
                 <strong>ℹ️ Aucune chanson générée.</strong><br>
                 <em>Utilisez [suno_music_form] pour créer votre première chanson !</em><br>
-                <small>v1.6.1 - Récupération optimisée des URLs</small>
+                <small>v1.7.0 - Timeout étendu à 5 minutes</small>
             </div>';
         }
         
@@ -857,7 +827,7 @@ class SunoMusicGenerator {
             
             <div style="margin-top: 20px; padding: 15px; background: #e7f3ff; border-radius: 5px;">
                 <p style="margin: 0; font-size: 14px;">
-                    💡 <strong>Astuce v1.6.1 :</strong> Si une chanson reste "En cours", utilisez 
+                    💡 <strong>Astuce v1.7.0 :</strong> Si une chanson reste "En cours", utilisez 
                     <code>[suno_force_check]</code> ou <code>[suno_check_task task_id="XXX"]</code> pour forcer la vérification.
                 </p>
             </div>
@@ -866,12 +836,108 @@ class SunoMusicGenerator {
         return ob_get_clean();
     }
     
+    public function force_check_status($atts) {
+        if (!current_user_can('manage_options')) {
+            return '<div style="padding: 15px; background: #f8d7da; border-radius: 5px; color: #721c24;">❌ Accès refusé</div>';
+        }
+        
+        global $wpdb;
+        $table_name = $wpdb->prefix . 'suno_generations';
+        
+        $pending = $wpdb->get_results("SELECT * FROM $table_name WHERE status = 'pending' OR status = 'timeout'");
+        
+        if (empty($pending)) {
+            return '<div style="background: #d4edda; padding: 15px; border-radius: 5px; color: #155724;">
+                ✅ Aucune génération en attente.
+            </div>';
+        }
+        
+        $output = '<div style="background: #f9f9f9; padding: 20px; border-radius: 5px;">';
+        $output .= '<h3>🔄 Vérification forcée des générations (v1.7.0)</h3>';
+        
+        foreach ($pending as $generation) {
+            $output .= '<div style="background: #fff; padding: 15px; border-radius: 5px; margin: 15px 0;">';
+            $output .= '<h4>' . esc_html($generation->title ?: $generation->prompt) . '</h4>';
+            $output .= '<p><small>Task ID: ' . esc_html($generation->task_id) . '</small></p>';
+            $output .= '<p><small>Statut actuel: ' . esc_html($generation->status) . '</small></p>';
+            
+            // Essayer plusieurs endpoints
+            $endpoints = array(
+                '/api/v1/music/' . $generation->task_id,
+                '/api/v1/status/' . $generation->task_id,
+                '/api/v1/get?ids=' . $generation->task_id,
+                '/api/v1/query?ids=' . $generation->task_id
+            );
+            
+            $found = false;
+            
+            foreach ($endpoints as $endpoint) {
+                if ($found) break;
+                
+                $api_url = $this->api_base_url . $endpoint;
+                
+                $response = wp_remote_get($api_url, array(
+                    'headers' => array(
+                        'Authorization' => 'Bearer ' . $this->api_key,
+                        'Content-Type' => 'application/json'
+                    ),
+                    'timeout' => 15
+                ));
+                
+                if (!is_wp_error($response) && wp_remote_retrieve_response_code($response) === 200) {
+                    $body = wp_remote_retrieve_body($response);
+                    $data = json_decode($body, true);
+                    
+                    if ($data) {
+                        // Sauvegarder la réponse
+                        $wpdb->update($table_name, 
+                            array('api_response' => $body), 
+                            array('id' => $generation->id)
+                        );
+                        
+                        $urls = $this->extract_urls_from_response($data);
+                        
+                        if (!empty($urls['audio_url'])) {
+                            $found = true;
+                            
+                            $update_data = array(
+                                'status' => 'completed',
+                                'completed_at' => current_time('mysql'),
+                                'audio_url' => $urls['audio_url'],
+                                'video_url' => $urls['video_url'],
+                                'image_url' => $urls['image_url']
+                            );
+                            
+                            $wpdb->update($table_name, $update_data, array('id' => $generation->id));
+                            
+                            $output .= '<p style="color: green;">✅ Mis à jour ! Audio trouvé.</p>';
+                            $output .= '<audio controls style="width: 100%; margin-top: 10px;">';
+                            $output .= '<source src="' . esc_url($urls['audio_url']) . '" type="audio/mpeg">';
+                            $output .= '</audio>';
+                        }
+                    }
+                }
+            }
+            
+            if (!$found) {
+                $output .= '<p style="color: orange;">⏳ Pas encore prêt ou introuvable...</p>';
+            }
+            
+            $output .= '</div>';
+        }
+        
+        $output .= '<p><a href="' . get_permalink() . '" style="background: #007cba; color: white; padding: 10px 20px; border-radius: 5px; text-decoration: none; display: inline-block; margin-top: 10px;">🔄 Rafraîchir</a></p>';
+        $output .= '</div>';
+        
+        return $output;
+    }
+    
     // Autres méthodes du plugin...
     public function test_shortcode($atts) {
         return '<div style="background: #d4edda; padding: 15px; border-radius: 5px; margin: 15px 0; color: #155724;">
-            <strong>✅ SUCCÈS !</strong> Plugin v1.6.1 (Récupération optimisée) fonctionnel<br>
+            <strong>✅ SUCCÈS !</strong> Plugin v1.7.0 (Timeout étendu) fonctionnel<br>
             <strong>Heure :</strong> ' . current_time('d/m/Y H:i:s') . '<br>
-            <strong>Améliorations :</strong> ✅ Meilleure détection des URLs audio
+            <strong>Améliorations :</strong> ✅ Jusqu\'à 5 minutes de génération supportées
         </div>';
     }
     
@@ -893,7 +959,7 @@ class SunoMusicGenerator {
         ob_start();
         ?>
         <div style="background: #f9f9f9; padding: 20px; border-radius: 5px;">
-            <h3>🔍 Debug v1.6.1 - Récupération optimisée</h3>
+            <h3>🔍 Debug v1.7.0 - Timeout étendu</h3>
             
             <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 15px; margin: 15px 0;">
                 <div style="background: #fff; padding: 15px; border-radius: 5px; text-align: center; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
@@ -915,11 +981,11 @@ class SunoMusicGenerator {
             </div>
             
             <div style="background: #d4edda; padding: 10px; border-radius: 5px; color: #155724; margin: 10px 0;">
-                <strong>🎯 Version 1.6.1 :</strong><br>
-                ✅ Recherche améliorée des URLs dans la réponse API<br>
-                ✅ Support de multiples formats de réponse<br>
-                ✅ Nouveau shortcode [suno_check_task] pour debug<br>
-                ✅ Logs détaillés pour diagnostic
+                <strong>🎯 Version 1.7.0 :</strong><br>
+                ✅ Limite de vérifications : <?php echo $this->max_status_checks; ?> (5 minutes)<br>
+                ✅ Sauvegarde des réponses API pour debug<br>
+                ✅ Fonction d'extraction d'URLs améliorée<br>
+                ✅ Support de plus d'endpoints API
             </div>
             
             <?php if (!empty($recent)): ?>
@@ -932,6 +998,7 @@ class SunoMusicGenerator {
                             <th style="padding: 8px; text-align: left; border-bottom: 2px solid #dee2e6;">Statut</th>
                             <th style="padding: 8px; text-align: left; border-bottom: 2px solid #dee2e6;">Audio</th>
                             <th style="padding: 8px; text-align: left; border-bottom: 2px solid #dee2e6;">Date</th>
+                            <th style="padding: 8px; text-align: left; border-bottom: 2px solid #dee2e6;">API</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -954,11 +1021,21 @@ class SunoMusicGenerator {
                             <td style="padding: 8px; border-bottom: 1px solid #dee2e6;">
                                 <?php echo date('d/m H:i', strtotime($item->created_at)); ?>
                             </td>
+                            <td style="padding: 8px; border-bottom: 1px solid #dee2e6;">
+                                <?php echo !empty($item->api_response) ? '📋' : '-'; ?>
+                            </td>
                         </tr>
                         <?php endforeach; ?>
                     </tbody>
                 </table>
             </div>
+            
+            <p style="margin-top: 10px;">
+                <a href="?page=<?php echo $_GET['page'] ?? ''; ?>&amp;shortcode=suno_test_response" 
+                   style="background: #007cba; color: white; padding: 8px 15px; border-radius: 5px; text-decoration: none;">
+                   📋 Voir la dernière réponse API
+                </a>
+            </p>
             <?php endif; ?>
         </div>
         <?php
@@ -975,12 +1052,12 @@ class SunoMusicGenerator {
         ob_start();
         ?>
         <div style="background: #f9f9f9; padding: 20px; border: 1px solid #ddd; margin: 20px 0; border-radius: 5px;">
-            <h3>🛡️ Test API - v1.6.1</h3>
+            <h3>🛡️ Test API - v1.7.0</h3>
             
             <?php if (isset($test_result['success']) && $test_result['success']): ?>
                 <div style="background: #d4edda; padding: 15px; border-radius: 5px; margin: 10px 0; color: #155724;">
                     <strong>✅ API accessible !</strong><br>
-                    La version 1.6.1 est prête avec récupération optimisée des URLs.
+                    La version 1.7.0 est prête avec timeout étendu à 5 minutes.
                 </div>
             <?php else: ?>
                 <div style="background: #f8d7da; padding: 15px; border-radius: 5px; margin: 10px 0; color: #721c24;">
@@ -1058,7 +1135,7 @@ class SunoMusicGenerator {
         </div>';
     }
     
-    // Gestionnaire de callback (au cas où)
+    // Gestionnaire de callback
     public function handle_suno_callback() {
         error_log('=== SUNO CALLBACK RECEIVED ===');
         error_log('POST data: ' . print_r($_POST, true));
@@ -1079,6 +1156,12 @@ class SunoMusicGenerator {
         if ($generation_id && $data) {
             global $wpdb;
             $table_name = $wpdb->prefix . 'suno_generations';
+            
+            // Sauvegarder la réponse du callback
+            $wpdb->update($table_name, 
+                array('api_response' => json_encode($data)), 
+                array('task_id' => $generation_id)
+            );
             
             $urls = $this->extract_urls_from_response($data);
             
