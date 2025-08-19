@@ -2,7 +2,7 @@
 
 Un plugin WordPress permettant de générer des chansons personnalisées avec l'intelligence artificielle via l'API Suno.
 
-![Version](https://img.shields.io/badge/version-1.1-blue.svg)
+![Version](https://img.shields.io/badge/version-2.0.0-blue.svg)
 ![WordPress](https://img.shields.io/badge/WordPress-5.0+-green.svg)
 ![PHP](https://img.shields.io/badge/PHP-7.4+-purple.svg)
 ![License](https://img.shields.io/badge/license-GPL--2.0-red.svg)
@@ -16,6 +16,7 @@ Un plugin WordPress permettant de générer des chansons personnalisées avec l'
 - 💾 **Historique** : Sauvegarde de toutes vos créations
 - 🔊 **Lecteur intégré** : Écoutez vos créations directement sur votre site
 - 📤 **Partage social** : Partagez facilement sur les réseaux sociaux
+- 🔄 **Multi-endpoints** : Support de plusieurs API pour une meilleure fiabilité
 
 ## 🚀 Installation
 
@@ -28,7 +29,7 @@ Un plugin WordPress permettant de générer des chansons personnalisées avec l'
 
 1. **Téléchargez le plugin**
    ```bash
-   git clone https://github.com/VOTRE_USERNAME/suno-music-generator.git
+   git clone https://github.com/WeAreReForm/suno-music-generator.git
    ```
 
 2. **Uploadez dans WordPress**
@@ -67,6 +68,12 @@ Affiche les créations musicales d'un utilisateur.
 ```
 Teste la connexion à l'API Suno.
 
+#### Informations de débogage (admin uniquement)
+```php
+[suno_debug]
+```
+Affiche les statistiques et informations de débogage.
+
 ### Exemple d'utilisation
 
 1. Ajoutez `[suno_music_form]` sur une page
@@ -84,6 +91,7 @@ Teste la connexion à l'API Suno.
 Dans `Réglages > Suno Music` :
 
 - **Clé API** : Votre clé d'accès SunoAPI.org
+- **Endpoint par défaut** : Choisissez l'endpoint API principal
 - **Test de connectivité** : Vérifiez que tout fonctionne
 
 ### Base de données
@@ -93,6 +101,7 @@ Le plugin crée automatiquement la table `wp_suno_generations` pour stocker :
 - Les IDs de tâches
 - Les URLs des fichiers générés
 - Les métadonnées des chansons
+- Les réponses API pour débogage
 
 ## 🛠️ Développement
 
@@ -103,6 +112,7 @@ suno-music-generator/
 ├── assets/
 │   ├── suno-music.js          # Interface JavaScript
 │   └── suno-music.css         # Styles CSS
+├── languages/                 # Fichiers de traduction
 └── README.md                  # Documentation
 ```
 
@@ -112,6 +122,13 @@ Ce plugin utilise [SunoAPI.org](https://sunoapi.org) pour :
 - Générer des chansons avec l'IA Suno
 - Récupérer les fichiers audio/vidéo
 - Gérer les crédits et limitations
+
+### Support multi-endpoints
+
+La version 2.0.0 supporte plusieurs endpoints pour une meilleure fiabilité :
+- API principale : `https://api.sunoapi.org`
+- API secondaire : `https://apibox.erweima.ai`
+- API de secours : `https://sunoapi.org`
 
 ### Hooks WordPress
 
@@ -136,7 +153,7 @@ Le plugin utilise :
 **❌ "Impossible de se connecter à l'API"**
 - Vérifiez votre connexion internet
 - Testez avec `[suno_test_api]`
-- Contactez le support de SunoAPI.org
+- Le plugin essaiera automatiquement plusieurs endpoints
 
 ### Logs de débogage
 
@@ -148,11 +165,23 @@ define('WP_DEBUG_LOG', true);
 
 ## 📋 Changelog
 
-### Version 1.1 (Actuelle)
+### Version 2.0.0 (19/08/2025)
+- ✅ Support multi-endpoints pour meilleure fiabilité
+- ✅ Amélioration de l'extraction des URLs
+- ✅ Meilleur système de débogage
+- ✅ Interface admin améliorée
+- ✅ Support de différents formats d'API
+- ✅ Gestion d'erreurs optimisée
+
+### Version 1.7.0
+- ✅ Timeout étendu à 5 minutes
+- ✅ Sauvegarde des réponses API
+- ✅ Nouveaux shortcodes de débogage
+
+### Version 1.1
 - ✅ Correction de la compatibilité SunoAPI.org
 - ✅ Amélioration du système de test API
 - ✅ Interface utilisateur améliorée
-- ✅ Gestion d'erreurs optimisée
 
 ### Version 1.0
 - 🚀 Version initiale
@@ -182,13 +211,13 @@ Ce projet est sous licence GPL-2.0. Voir le fichier [LICENSE](LICENSE) pour plus
 
 ## 📞 Support
 
-- 🐛 **Issues** : [GitHub Issues](https://github.com/VOTRE_USERNAME/suno-music-generator/issues)
-- 💬 **Discussions** : [GitHub Discussions](https://github.com/VOTRE_USERNAME/suno-music-generator/discussions)
-- 📧 **Email** : votre-email@example.com
+- 🐛 **Issues** : [GitHub Issues](https://github.com/WeAreReForm/suno-music-generator/issues)
+- 💬 **Discussions** : [GitHub Discussions](https://github.com/WeAreReForm/suno-music-generator/discussions)
+- 📧 **Email** : hello@wearereform.fr
 
 ---
 
 ## 🚀 Développement en cours
-Ce plugin est activement développé. Dernière mise à jour: [2025-07-28]
+Ce plugin est activement développé. Dernière mise à jour: **19/08/2025**
 
 ⭐ **Si ce plugin vous est utile, n'hésitez pas à lui donner une étoile sur GitHub !**
