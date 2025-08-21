@@ -1,0 +1,201 @@
+/**
+ * Suno Music Generator v5.0 - Styles
+ */
+
+:root {
+    --suno-primary: #6366f1;
+    --suno-secondary: #f59e0b;
+    --suno-success: #10b981;
+    --suno-error: #ef4444;
+    --suno-bg: #f8fafc;
+    --suno-text: #1e293b;
+    --suno-border: #e2e8f0;
+    --suno-radius: 8px;
+}
+
+/* Container principal */
+.suno-form-container,
+.suno-player-container,
+.suno-test-container {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 2rem;
+    background: white;
+    border-radius: var(--suno-radius);
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.suno-form-container h3,
+.suno-player-container h3,
+.suno-test-container h3 {
+    color: var(--suno-text);
+    font-size: 1.5rem;
+    margin-bottom: 1.5rem;
+    text-align: center;
+}
+
+/* Formulaire */
+.suno-field {
+    margin-bottom: 1.5rem;
+}
+
+.suno-field label {
+    display: block;
+    font-weight: 600;
+    color: var(--suno-text);
+    margin-bottom: 0.5rem;
+}
+
+.suno-field input,
+.suno-field textarea {
+    width: 100%;
+    padding: 0.75rem;
+    border: 2px solid var(--suno-border);
+    border-radius: var(--suno-radius);
+    font-size: 1rem;
+    transition: border-color 0.3s;
+}
+
+.suno-field input:focus,
+.suno-field textarea:focus {
+    outline: none;
+    border-color: var(--suno-primary);
+}
+
+.suno-field textarea {
+    min-height: 100px;
+    resize: vertical;
+}
+
+/* Boutons */
+.suno-button {
+    background: var(--suno-primary);
+    color: white;
+    border: none;
+    padding: 1rem 2rem;
+    font-size: 1rem;
+    font-weight: 600;
+    border-radius: var(--suno-radius);
+    cursor: pointer;
+    transition: all 0.3s;
+    display: inline-block;
+}
+
+.suno-button:hover {
+    background: #4f46e5;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
+}
+
+.suno-button:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+/* Messages */
+.suno-error,
+.suno-success,
+.suno-info {
+    padding: 1rem;
+    border-radius: var(--suno-radius);
+    margin: 1rem 0;
+    text-align: center;
+}
+
+.suno-error {
+    background: #fee2e2;
+    color: var(--suno-error);
+    border: 1px solid var(--suno-error);
+}
+
+.suno-success {
+    background: #dcfce7;
+    color: var(--suno-success);
+    border: 1px solid var(--suno-success);
+}
+
+.suno-info {
+    background: var(--suno-bg);
+    color: var(--suno-text);
+}
+
+/* Status */
+#suno-status {
+    text-align: center;
+    padding: 1rem;
+    margin: 1rem 0;
+}
+
+#suno-status.loading {
+    background: #fef3c7;
+    border-radius: var(--suno-radius);
+}
+
+/* Player */
+.suno-tracks {
+    display: grid;
+    gap: 1.5rem;
+}
+
+.suno-track {
+    padding: 1.5rem;
+    background: var(--suno-bg);
+    border-radius: var(--suno-radius);
+    border: 1px solid var(--suno-border);
+    transition: all 0.3s;
+}
+
+.suno-track:hover {
+    transform: translateX(4px);
+    border-color: var(--suno-primary);
+}
+
+.suno-track h4 {
+    color: var(--suno-text);
+    margin: 0 0 0.5rem 0;
+    font-size: 1.2rem;
+}
+
+.suno-track p {
+    color: #64748b;
+    margin: 0.5rem 0;
+}
+
+.suno-track audio {
+    width: 100%;
+    margin: 1rem 0;
+}
+
+.suno-track small {
+    color: #94a3b8;
+    font-size: 0.875rem;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .suno-form-container,
+    .suno-player-container,
+    .suno-test-container {
+        padding: 1rem;
+        margin: 1rem;
+    }
+    
+    .tracks-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* Spinner */
+.suno-spinner {
+    display: inline-block;
+    width: 20px;
+    height: 20px;
+    border: 3px solid var(--suno-border);
+    border-top-color: var(--suno-primary);
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
