@@ -195,7 +195,7 @@ jQuery(document).ready(function($) {
             <div class="result-content">
                 <h4>🎉 Votre chanson est prête !</h4>
                 
-                ${data.title ? `<h5 style="text-align: center; color: var(--suno-text-light);">"${escapeHtml(data.title)}"</h5>` : ''}
+                ${data.title ? `<h5 style="text-align: center; color: var(--suno-text-light);">"${data.title}"</h5>` : ''}
                 
                 ${data.audio_url ? `
                     <div class="audio-player">
@@ -324,21 +324,20 @@ jQuery(document).ready(function($) {
             const length = $(this).val().length;
             const maxLength = 500;
             
-            if (!$('#char-counter').length) {
-                $(this).after('<div id="char-counter" class="char-counter"></div>');
+            let counter = $('#char-counter');
+            if (!counter.length) {
+                counter = $('<div id="char-counter" class="char-counter"></div>');
+                $(this).after(counter);
             }
             
-            $('#char-counter').text(`${length}/${maxLength} caractères`);
+            counter.text(`${length}/${maxLength} caractères`);
             
             if (length > maxLength) {
-                $('#char-counter').addClass('over-limit');
+                counter.addClass('over-limit');
             } else {
-                $('#char-counter').removeClass('over-limit');
+                counter.removeClass('over-limit');
             }
         });
-        
-        // Déclencher au chargement
-        $('#music-prompt').trigger('input');
     }
     
     // Gestion des brouillons
@@ -354,18 +353,25 @@ jQuery(document).ready(function($) {
             timestamp: Date.now()
         };
         
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(draft));
+        try {
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(draft));
+        } catch (e) {
+            console.error('Erreur lors de la sauvegarde du brouillon:', e);
+        }
     }
     
     function loadDraftIfExists() {
-        const draft = localStorage.getItem(STORAGE_KEY);
-        if (draft) {
-            try {
+        try {
+            const draft = localStorage.getItem(STORAGE_KEY);
+            if (draft) {
                 const data = JSON.parse(draft);
                 
-                // Vérifier si le brouillon n'est pas trop vieux (24h)
-                if (data.timestamp && (Date.now() - data.timestamp) < 86400000) {
-                    $('#music-prompt').val(data.prompt || '');
+                // Vérifier si le brouillon n'est pas trop ancien (7 jours)
+                const draftAge = Date.now() - (data.timestamp || 0);
+                const sevenDays = 7 * 24 * 60 * 60 * 1000;
+                
+                if (draftAge < sevenDays) {
+                    $('#music-prompt').val(data.prompt || '').trigger('input');
                     $('#music-style').val(data.style || '');
                     $('#music-title').val(data.title || '');
                     $('#music-lyrics').val(data.lyrics || '');
@@ -375,15 +381,18 @@ jQuery(document).ready(function($) {
                 } else {
                     clearDraft();
                 }
-            } catch (e) {
-                console.error('Erreur de chargement du brouillon:', e);
-                clearDraft();
             }
+        } catch (e) {
+            console.error('Erreur lors du chargement du brouillon:', e);
         }
     }
     
     function clearDraft() {
-        localStorage.removeItem(STORAGE_KEY);
+        try {
+            localStorage.removeItem(STORAGE_KEY);
+        } catch (e) {
+            console.error('Erreur lors de la suppression du brouillon:', e);
+        }
     }
     
     // Fonction d'échappement HTML
@@ -398,22 +407,22 @@ jQuery(document).ready(function($) {
         return text.replace(/[&<>"']/g, m => map[m]);
     }
     
-    // Fonctions de partage (globales pour onclick)
+    // Fonctions de partage social (globales)
     window.shareOnTwitter = function(audioUrl) {
         const text = "J'ai créé cette chanson avec l'IA Suno ! 🎵";
         const url = `https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}&url=${encodeURIComponent(audioUrl)}`;
-        window.open(url, '_blank', 'width=600,height=400');
+        window.open(url, '_blank', 'width=550,height=420');
     };
     
     window.shareOnFacebook = function(audioUrl) {
         const url = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(audioUrl)}`;
-        window.open(url, '_blank', 'width=600,height=400');
+        window.open(url, '_blank', 'width=550,height=420');
     };
     
     window.copyToClipboard = function(text) {
         if (navigator.clipboard && navigator.clipboard.writeText) {
             navigator.clipboard.writeText(text).then(function() {
-                showNotification('✅ Lien copié dans le presse-papiers !', 'success');
+                showNotification('Lien copié dans le presse-papiers !', 'success');
             }).catch(function(err) {
                 fallbackCopyToClipboard(text);
             });
@@ -426,46 +435,48 @@ jQuery(document).ready(function($) {
         const textArea = document.createElement('textarea');
         textArea.value = text;
         textArea.style.position = 'fixed';
-        textArea.style.left = '-9999px';
+        textArea.style.top = '0';
+        textArea.style.left = '0';
+        textArea.style.width = '2em';
+        textArea.style.height = '2em';
+        textArea.style.padding = '0';
+        textArea.style.border = 'none';
+        textArea.style.outline = 'none';
+        textArea.style.boxShadow = 'none';
+        textArea.style.background = 'transparent';
+        
         document.body.appendChild(textArea);
         textArea.focus();
         textArea.select();
         
         try {
-            document.execCommand('copy');
-            showNotification('✅ Lien copié !', 'success');
+            const successful = document.execCommand('copy');
+            if (successful) {
+                showNotification('Lien copié !', 'success');
+            } else {
+                showNotification('Impossible de copier le lien', 'error');
+            }
         } catch (err) {
-            showNotification('❌ Impossible de copier le lien', 'error');
+            showNotification('Erreur lors de la copie', 'error');
         }
         
         document.body.removeChild(textArea);
     }
     
-    // Fonction globale pour partager une piste depuis la playlist
     window.shareTrack = function(audioUrl) {
-        const modal = $(`
-            <div style="position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); z-index: 9999; display: flex; align-items: center; justify-content: center;">
-                <div style="background: white; padding: 2rem; border-radius: 12px; max-width: 400px; width: 90%;">
-                    <h3 style="margin-bottom: 1rem;">Partager cette chanson</h3>
-                    <div style="display: flex; flex-direction: column; gap: 1rem;">
-                        <button onclick="shareOnTwitter('${escapeHtml(audioUrl)}')" class="suno-btn" style="background: #1da1f2;">
-                            🐦 Twitter
-                        </button>
-                        <button onclick="shareOnFacebook('${escapeHtml(audioUrl)}')" class="suno-btn" style="background: #4267b2;">
-                            📘 Facebook
-                        </button>
-                        <button onclick="copyToClipboard('${escapeHtml(audioUrl)}')" class="suno-btn" style="background: var(--suno-text-light);">
-                            📋 Copier le lien
-                        </button>
-                        <button onclick="jQuery(this).closest('div').parent().remove()" class="suno-btn" style="background: #ccc; color: #333;">
-                            ✖️ Fermer
-                        </button>
-                    </div>
-                </div>
-            </div>
-        `);
+        const shareData = {
+            title: 'Ma création musicale Suno',
+            text: 'Écoutez cette chanson créée avec l\'IA !',
+            url: audioUrl
+        };
         
-        $('body').append(modal);
+        if (navigator.share) {
+            navigator.share(shareData)
+                .then(() => console.log('Partage réussi'))
+                .catch((error) => console.log('Erreur de partage:', error));
+        } else {
+            copyToClipboard(audioUrl);
+        }
     };
     
     // Auto-resize des textareas
@@ -474,9 +485,14 @@ jQuery(document).ready(function($) {
         this.style.height = Math.min(this.scrollHeight, 300) + 'px';
     });
     
-    // Démarrer l'initialisation
+    // Initialisation
     init();
     
-    // Version check
-    console.log('🎵 Suno Music Generator v2.0 loaded successfully');
+    // Afficher la notification de version au chargement
+    if (!sessionStorage.getItem('v2_notification_shown')) {
+        setTimeout(function() {
+            showNotification('🎉 Version 2.0 - Génération et affichage améliorés !', 'success');
+            sessionStorage.setItem('v2_notification_shown', 'true');
+        }, 1000);
+    }
 });
