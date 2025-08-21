@@ -1,0 +1,737 @@
+/**
+ * Suno Music Generator v5.0.0
+ * Feuille de styles principale
+ */
+
+/* ================================
+   Variables CSS
+   ================================ */
+:root {
+    --suno-primary: #6366f1;
+    --suno-primary-dark: #4f46e5;
+    --suno-primary-light: #818cf8;
+    --suno-secondary: #f59e0b;
+    --suno-secondary-dark: #d97706;
+    --suno-success: #10b981;
+    --suno-error: #ef4444;
+    --suno-warning: #f59e0b;
+    --suno-info: #3b82f6;
+    
+    --suno-background: #f8fafc;
+    --suno-surface: #ffffff;
+    --suno-surface-hover: #f9fafb;
+    --suno-text: #1e293b;
+    --suno-text-light: #64748b;
+    --suno-text-muted: #94a3b8;
+    --suno-border: #e2e8f0;
+    --suno-border-hover: #cbd5e1;
+    
+    --suno-shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+    --suno-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+    --suno-shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+    --suno-shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+    
+    --suno-radius-sm: 4px;
+    --suno-radius: 8px;
+    --suno-radius-lg: 12px;
+    --suno-radius-xl: 16px;
+    
+    --suno-transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    --suno-transition-fast: all 0.15s ease;
+}
+
+/* Mode sombre */
+@media (prefers-color-scheme: dark) {
+    :root {
+        --suno-background: #0f172a;
+        --suno-surface: #1e293b;
+        --suno-surface-hover: #334155;
+        --suno-text: #f1f5f9;
+        --suno-text-light: #cbd5e1;
+        --suno-text-muted: #94a3b8;
+        --suno-border: #334155;
+        --suno-border-hover: #475569;
+    }
+}
+
+/* ================================
+   Styles globaux
+   ================================ */
+.suno-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 2rem;
+    animation: fadeIn 0.5s ease-out;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* ================================
+   Générateur de musique
+   ================================ */
+#suno-music-generator {
+    background: var(--suno-surface);
+    border-radius: var(--suno-radius-xl);
+    box-shadow: var(--suno-shadow-xl);
+    padding: 2.5rem;
+    border: 1px solid var(--suno-border);
+}
+
+.suno-header {
+    text-align: center;
+    margin-bottom: 3rem;
+}
+
+.suno-header h2 {
+    font-size: 2.5rem;
+    font-weight: 700;
+    background: linear-gradient(135deg, var(--suno-primary), var(--suno-secondary));
+    background-clip: text;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    margin-bottom: 0.5rem;
+}
+
+.suno-header p {
+    color: var(--suno-text-light);
+    font-size: 1.1rem;
+}
+
+/* Formulaire */
+.suno-form {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+
+.suno-form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.suno-form-group label {
+    font-weight: 600;
+    color: var(--suno-text);
+    font-size: 0.95rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.suno-form-group label .required {
+    color: var(--suno-error);
+}
+
+.suno-form-group input,
+.suno-form-group textarea,
+.suno-form-group select {
+    padding: 0.875rem 1rem;
+    border: 2px solid var(--suno-border);
+    border-radius: var(--suno-radius);
+    font-size: 1rem;
+    transition: var(--suno-transition);
+    background: var(--suno-surface);
+    color: var(--suno-text);
+}
+
+.suno-form-group input:focus,
+.suno-form-group textarea:focus,
+.suno-form-group select:focus {
+    outline: none;
+    border-color: var(--suno-primary);
+    box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+}
+
+.suno-form-group textarea {
+    resize: vertical;
+    min-height: 120px;
+    font-family: inherit;
+}
+
+.suno-form-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+}
+
+@media (max-width: 768px) {
+    .suno-form-row {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* Caractères compteur */
+.suno-char-counter {
+    font-size: 0.85rem;
+    color: var(--suno-text-muted);
+    text-align: right;
+    margin-top: 0.25rem;
+}
+
+.suno-char-counter.warning {
+    color: var(--suno-warning);
+}
+
+.suno-char-counter.error {
+    color: var(--suno-error);
+}
+
+/* Checkbox et radio */
+.suno-checkbox,
+.suno-radio {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    cursor: pointer;
+}
+
+.suno-checkbox input[type="checkbox"],
+.suno-radio input[type="radio"] {
+    width: 1.25rem;
+    height: 1.25rem;
+    cursor: pointer;
+}
+
+/* Styles de musique */
+.suno-music-styles {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+    gap: 0.75rem;
+    margin-top: 0.5rem;
+}
+
+.suno-style-chip {
+    padding: 0.625rem 1rem;
+    border: 2px solid var(--suno-border);
+    border-radius: var(--suno-radius);
+    background: var(--suno-surface);
+    cursor: pointer;
+    transition: var(--suno-transition);
+    text-align: center;
+    font-size: 0.9rem;
+}
+
+.suno-style-chip:hover {
+    border-color: var(--suno-primary-light);
+    background: var(--suno-surface-hover);
+}
+
+.suno-style-chip.selected {
+    border-color: var(--suno-primary);
+    background: var(--suno-primary);
+    color: white;
+}
+
+/* Boutons */
+.suno-btn {
+    padding: 0.875rem 2rem;
+    border: none;
+    border-radius: var(--suno-radius);
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: var(--suno-transition);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    min-height: 48px;
+}
+
+.suno-btn-primary {
+    background: linear-gradient(135deg, var(--suno-primary), var(--suno-primary-dark));
+    color: white;
+    box-shadow: var(--suno-shadow);
+}
+
+.suno-btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--suno-shadow-lg);
+}
+
+.suno-btn-secondary {
+    background: var(--suno-surface);
+    color: var(--suno-primary);
+    border: 2px solid var(--suno-primary);
+}
+
+.suno-btn-secondary:hover {
+    background: var(--suno-primary);
+    color: white;
+}
+
+.suno-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    transform: none !important;
+}
+
+.suno-btn-icon {
+    font-size: 1.25rem;
+}
+
+/* ================================
+   Statut de génération
+   ================================ */
+.suno-generation-status {
+    background: linear-gradient(135deg, #f0f9ff, #e0f2fe);
+    border: 2px solid #0ea5e9;
+    border-radius: var(--suno-radius-lg);
+    padding: 2rem;
+    margin-top: 2rem;
+    text-align: center;
+}
+
+.suno-status-content {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1.5rem;
+}
+
+.suno-spinner {
+    width: 50px;
+    height: 50px;
+    border: 4px solid var(--suno-border);
+    border-top: 4px solid var(--suno-primary);
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+.suno-progress-bar {
+    width: 100%;
+    max-width: 400px;
+    height: 8px;
+    background: var(--suno-border);
+    border-radius: 4px;
+    overflow: hidden;
+}
+
+.suno-progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--suno-primary), var(--suno-secondary));
+    transition: width 0.5s ease;
+    border-radius: 4px;
+}
+
+.suno-status-text {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: var(--suno-text);
+}
+
+.suno-status-subtext {
+    font-size: 0.9rem;
+    color: var(--suno-text-light);
+}
+
+/* ================================
+   Résultats
+   ================================ */
+.suno-result {
+    background: linear-gradient(135deg, #f0fdf4, #ecfdf5);
+    border: 2px solid var(--suno-success);
+    border-radius: var(--suno-radius-lg);
+    padding: 2rem;
+    margin-top: 2rem;
+}
+
+.suno-result-content {
+    text-align: center;
+}
+
+.suno-result-title {
+    font-size: 1.75rem;
+    font-weight: 700;
+    color: var(--suno-text);
+    margin-bottom: 1.5rem;
+}
+
+.suno-audio-player {
+    margin: 2rem 0;
+}
+
+.suno-audio-player audio {
+    width: 100%;
+    max-width: 600px;
+    border-radius: var(--suno-radius);
+    box-shadow: var(--suno-shadow);
+}
+
+.suno-track-artwork {
+    margin: 2rem 0;
+}
+
+.suno-track-artwork img {
+    max-width: 400px;
+    width: 100%;
+    border-radius: var(--suno-radius-lg);
+    box-shadow: var(--suno-shadow-xl);
+}
+
+.suno-result-actions {
+    display: flex;
+    gap: 1rem;
+    justify-content: center;
+    flex-wrap: wrap;
+    margin: 2rem 0;
+}
+
+/* ================================
+   Galerie
+   ================================ */
+.suno-gallery {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 1.5rem;
+    margin-top: 2rem;
+}
+
+.suno-gallery-item {
+    background: var(--suno-surface);
+    border-radius: var(--suno-radius-lg);
+    overflow: hidden;
+    box-shadow: var(--suno-shadow);
+    transition: var(--suno-transition);
+    cursor: pointer;
+}
+
+.suno-gallery-item:hover {
+    transform: translateY(-4px);
+    box-shadow: var(--suno-shadow-xl);
+}
+
+.suno-gallery-image {
+    width: 100%;
+    height: 200px;
+    object-fit: cover;
+    background: linear-gradient(135deg, var(--suno-primary-light), var(--suno-secondary));
+}
+
+.suno-gallery-content {
+    padding: 1.5rem;
+}
+
+.suno-gallery-title {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: var(--suno-text);
+    margin-bottom: 0.5rem;
+}
+
+.suno-gallery-meta {
+    display: flex;
+    gap: 1rem;
+    color: var(--suno-text-light);
+    font-size: 0.9rem;
+}
+
+.suno-gallery-actions {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 1rem;
+    padding-top: 1rem;
+    border-top: 1px solid var(--suno-border);
+}
+
+.suno-like-btn {
+    background: none;
+    border: none;
+    color: var(--suno-text-light);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+    transition: var(--suno-transition);
+}
+
+.suno-like-btn:hover {
+    color: var(--suno-error);
+}
+
+.suno-like-btn.liked {
+    color: var(--suno-error);
+}
+
+/* ================================
+   Playlist
+   ================================ */
+.suno-playlist {
+    background: var(--suno-surface);
+    border-radius: var(--suno-radius-lg);
+    padding: 1.5rem;
+    box-shadow: var(--suno-shadow);
+}
+
+.suno-playlist-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.5rem;
+    padding-bottom: 1rem;
+    border-bottom: 2px solid var(--suno-border);
+}
+
+.suno-playlist-title {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--suno-text);
+}
+
+.suno-playlist-count {
+    color: var(--suno-text-light);
+    font-size: 0.9rem;
+}
+
+.suno-track {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 1rem;
+    border-radius: var(--suno-radius);
+    transition: var(--suno-transition);
+    cursor: pointer;
+}
+
+.suno-track:hover {
+    background: var(--suno-surface-hover);
+}
+
+.suno-track-number {
+    font-size: 0.9rem;
+    color: var(--suno-text-muted);
+    min-width: 30px;
+}
+
+.suno-track-image {
+    width: 50px;
+    height: 50px;
+    border-radius: var(--suno-radius-sm);
+    object-fit: cover;
+    background: linear-gradient(135deg, var(--suno-primary-light), var(--suno-secondary));
+}
+
+.suno-track-info {
+    flex: 1;
+}
+
+.suno-track-title {
+    font-weight: 600;
+    color: var(--suno-text);
+    margin-bottom: 0.25rem;
+}
+
+.suno-track-artist {
+    font-size: 0.9rem;
+    color: var(--suno-text-light);
+}
+
+.suno-track-duration {
+    font-size: 0.9rem;
+    color: var(--suno-text-muted);
+}
+
+.suno-track-actions {
+    display: flex;
+    gap: 0.5rem;
+    opacity: 0;
+    transition: var(--suno-transition);
+}
+
+.suno-track:hover .suno-track-actions {
+    opacity: 1;
+}
+
+/* ================================
+   Messages et notifications
+   ================================ */
+.suno-notice {
+    padding: 1rem 1.5rem;
+    border-radius: var(--suno-radius);
+    margin: 1rem 0;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.suno-notice-info {
+    background: #eff6ff;
+    border: 1px solid #3b82f6;
+    color: #1e40af;
+}
+
+.suno-notice-success {
+    background: #f0fdf4;
+    border: 1px solid #10b981;
+    color: #065f46;
+}
+
+.suno-notice-warning {
+    background: #fffbeb;
+    border: 1px solid #f59e0b;
+    color: #92400e;
+}
+
+.suno-notice-error {
+    background: #fef2f2;
+    border: 1px solid #ef4444;
+    color: #991b1b;
+}
+
+/* ================================
+   Modal
+   ================================ */
+.suno-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 9999;
+    animation: fadeIn 0.3s ease;
+}
+
+.suno-modal-content {
+    background: var(--suno-surface);
+    border-radius: var(--suno-radius-xl);
+    padding: 2rem;
+    max-width: 500px;
+    width: 90%;
+    max-height: 90vh;
+    overflow-y: auto;
+    box-shadow: var(--suno-shadow-xl);
+    animation: slideUp 0.3s ease;
+}
+
+@keyframes slideUp {
+    from {
+        transform: translateY(50px);
+        opacity: 0;
+    }
+    to {
+        transform: translateY(0);
+        opacity: 1;
+    }
+}
+
+.suno-modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.5rem;
+}
+
+.suno-modal-title {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--suno-text);
+}
+
+.suno-modal-close {
+    background: none;
+    border: none;
+    font-size: 1.5rem;
+    color: var(--suno-text-light);
+    cursor: pointer;
+    transition: var(--suno-transition);
+}
+
+.suno-modal-close:hover {
+    color: var(--suno-text);
+}
+
+/* ================================
+   Responsive
+   ================================ */
+@media (max-width: 768px) {
+    .suno-container {
+        padding: 1rem;
+    }
+    
+    #suno-music-generator {
+        padding: 1.5rem;
+    }
+    
+    .suno-header h2 {
+        font-size: 2rem;
+    }
+    
+    .suno-gallery {
+        grid-template-columns: 1fr;
+    }
+    
+    .suno-result-actions {
+        flex-direction: column;
+        width: 100%;
+    }
+    
+    .suno-btn {
+        width: 100%;
+    }
+}
+
+/* ================================
+   Animations supplémentaires
+   ================================ */
+.suno-pulse {
+    animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+@keyframes pulse {
+    0%, 100% {
+        opacity: 1;
+    }
+    50% {
+        opacity: .5;
+    }
+}
+
+.suno-bounce {
+    animation: bounce 1s infinite;
+}
+
+@keyframes bounce {
+    0%, 100% {
+        transform: translateY(-25%);
+        animation-timing-function: cubic-bezier(0.8, 0, 1, 1);
+    }
+    50% {
+        transform: translateY(0);
+        animation-timing-function: cubic-bezier(0, 0, 0.2, 1);
+    }
+}
+
+/* ================================
+   Utilitaires
+   ================================ */
+.suno-text-center { text-align: center; }
+.suno-text-left { text-align: left; }
+.suno-text-right { text-align: right; }
+.suno-mt-1 { margin-top: 0.5rem; }
+.suno-mt-2 { margin-top: 1rem; }
+.suno-mt-3 { margin-top: 1.5rem; }
+.suno-mb-1 { margin-bottom: 0.5rem; }
+.suno-mb-2 { margin-bottom: 1rem; }
+.suno-mb-3 { margin-bottom: 1.5rem; }
+.suno-hidden { display: none !important; }
+.suno-visible { display: block !important; }
