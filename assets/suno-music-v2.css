@@ -1,0 +1,602 @@
+/**
+ * Suno Music Generator v2.0 - Styles CSS
+ */
+
+:root {
+    --suno-primary: #6366f1;
+    --suno-primary-dark: #4f46e5;
+    --suno-secondary: #f59e0b;
+    --suno-success: #10b981;
+    --suno-error: #ef4444;
+    --suno-warning: #f59e0b;
+    --suno-info: #3b82f6;
+    --suno-background: #f8fafc;
+    --suno-surface: #ffffff;
+    --suno-text: #1e293b;
+    --suno-text-light: #64748b;
+    --suno-border: #e2e8f0;
+    --suno-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+    --suno-shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+    --suno-border-radius: 12px;
+    --suno-transition: all 0.3s ease;
+}
+
+/* Container principal */
+.suno-container {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 2rem;
+    background: var(--suno-surface);
+    border-radius: var(--suno-border-radius);
+    box-shadow: var(--suno-shadow-lg);
+    border: 1px solid var(--suno-border);
+    animation: fadeIn 0.5s ease-out;
+}
+
+.suno-container h3 {
+    color: var(--suno-text);
+    font-size: 1.75rem;
+    font-weight: 700;
+    margin-bottom: 1.5rem;
+    text-align: center;
+    background: linear-gradient(135deg, var(--suno-primary), var(--suno-secondary));
+    background-clip: text;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+/* Formulaire */
+#music-generation-form {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+
+.form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.form-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+}
+
+.form-group label {
+    font-weight: 600;
+    color: var(--suno-text);
+    font-size: 0.9rem;
+}
+
+.form-group input,
+.form-group textarea,
+.form-group select {
+    padding: 0.75rem 1rem;
+    border: 2px solid var(--suno-border);
+    border-radius: 8px;
+    font-size: 1rem;
+    transition: var(--suno-transition);
+    background: var(--suno-surface);
+    color: var(--suno-text);
+}
+
+.form-group input:focus,
+.form-group textarea:focus,
+.form-group select:focus {
+    outline: none;
+    border-color: var(--suno-primary);
+    box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+}
+
+.form-group textarea {
+    resize: vertical;
+    min-height: 100px;
+    font-family: inherit;
+}
+
+.checkbox-group {
+    flex-direction: row;
+}
+
+.checkbox-group label {
+    display: flex;
+    align-items: center;
+    cursor: pointer;
+}
+
+.checkbox-group input[type="checkbox"] {
+    width: auto;
+    margin-right: 0.5rem;
+    transform: scale(1.2);
+    cursor: pointer;
+}
+
+/* Boutons */
+.suno-btn {
+    padding: 1rem 2rem;
+    border: none;
+    border-radius: 8px;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: var(--suno-transition);
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    min-height: 48px;
+}
+
+.suno-btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    transform: none !important;
+}
+
+.suno-btn-primary {
+    background: linear-gradient(135deg, var(--suno-primary), var(--suno-primary-dark));
+    color: white;
+    box-shadow: var(--suno-shadow);
+}
+
+.suno-btn-primary:hover:not(:disabled) {
+    transform: translateY(-2px);
+    box-shadow: var(--suno-shadow-lg);
+}
+
+.suno-btn-secondary {
+    background: var(--suno-secondary);
+    color: white;
+}
+
+.suno-btn-secondary:hover:not(:disabled) {
+    background: #d97706;
+    transform: translateY(-2px);
+}
+
+/* Statut de génération */
+.suno-status {
+    background: linear-gradient(135deg, #f0f9ff, #e0f2fe);
+    border: 2px solid #0ea5e9;
+    border-radius: var(--suno-border-radius);
+    padding: 2rem;
+    text-align: center;
+    margin-top: 1.5rem;
+    animation: slideIn 0.5s ease-out;
+}
+
+.status-content {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1rem;
+}
+
+.status-content p {
+    margin: 0;
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: var(--suno-text);
+}
+
+#status-details {
+    color: var(--suno-text-light);
+    font-size: 0.9rem;
+}
+
+/* Spinner */
+.spinner {
+    width: 40px;
+    height: 40px;
+    border: 4px solid var(--suno-border);
+    border-top: 4px solid var(--suno-primary);
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+/* Barre de progression */
+.progress-bar {
+    width: 100%;
+    height: 8px;
+    background: var(--suno-border);
+    border-radius: 4px;
+    overflow: hidden;
+}
+
+.progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--suno-primary), var(--suno-secondary));
+    transition: width 0.5s ease;
+    border-radius: 4px;
+    animation: pulse 2s ease-in-out infinite;
+}
+
+@keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.8; }
+}
+
+/* Résultats */
+.suno-result {
+    background: linear-gradient(135deg, #f0fdf4, #ecfdf5);
+    border: 2px solid var(--suno-success);
+    border-radius: var(--suno-border-radius);
+    padding: 2rem;
+    margin-top: 1.5rem;
+    animation: slideIn 0.5s ease-out;
+}
+
+.result-content h4 {
+    color: var(--suno-text);
+    font-size: 1.5rem;
+    margin-bottom: 1.5rem;
+    text-align: center;
+}
+
+.audio-player {
+    margin: 1.5rem 0;
+    text-align: center;
+}
+
+.audio-player audio {
+    width: 100%;
+    max-width: 500px;
+    border-radius: 8px;
+    box-shadow: var(--suno-shadow);
+}
+
+.track-artwork {
+    text-align: center;
+    margin: 1.5rem 0;
+}
+
+.track-artwork img {
+    max-width: 300px;
+    width: 100%;
+    border-radius: var(--suno-border-radius);
+    box-shadow: var(--suno-shadow-lg);
+}
+
+.result-actions {
+    display: flex;
+    gap: 1rem;
+    justify-content: center;
+    flex-wrap: wrap;
+    margin: 1.5rem 0;
+}
+
+/* Playlist */
+.suno-playlist {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 2rem;
+}
+
+.suno-playlist h3 {
+    color: var(--suno-text);
+    font-size: 1.75rem;
+    font-weight: 700;
+    margin-bottom: 2rem;
+    text-align: center;
+    background: linear-gradient(135deg, var(--suno-primary), var(--suno-secondary));
+    background-clip: text;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+.tracks-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+    gap: 1.5rem;
+}
+
+.suno-track {
+    background: var(--suno-surface);
+    border: 1px solid var(--suno-border);
+    border-radius: var(--suno-border-radius);
+    padding: 1.5rem;
+    box-shadow: var(--suno-shadow);
+    transition: var(--suno-transition);
+    animation: fadeIn 0.5s ease-out;
+}
+
+.suno-track:hover {
+    transform: translateY(-4px);
+    box-shadow: var(--suno-shadow-lg);
+    border-color: var(--suno-primary);
+}
+
+.track-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: start;
+    margin-bottom: 1rem;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+}
+
+.track-header h4 {
+    color: var(--suno-text);
+    font-size: 1.2rem;
+    margin: 0;
+    flex: 1;
+}
+
+.track-info {
+    margin-bottom: 1rem;
+}
+
+.track-prompt {
+    color: var(--suno-text-light);
+    font-style: italic;
+    margin-bottom: 0.5rem;
+    line-height: 1.4;
+}
+
+.track-style,
+.track-date,
+.track-duration {
+    display: inline-block;
+    padding: 0.25rem 0.75rem;
+    background: var(--suno-background);
+    border-radius: 16px;
+    font-size: 0.8rem;
+    margin-right: 0.5rem;
+    margin-bottom: 0.5rem;
+}
+
+.track-style {
+    background: linear-gradient(135deg, var(--suno-primary), var(--suno-primary-dark));
+    color: white;
+}
+
+.track-date {
+    color: var(--suno-text-light);
+}
+
+.track-duration {
+    background: var(--suno-info);
+    color: white;
+}
+
+.track-player {
+    margin: 1rem 0;
+}
+
+.track-player audio {
+    width: 100%;
+    border-radius: 6px;
+}
+
+.track-actions {
+    display: flex;
+    gap: 0.5rem;
+    margin-top: 1rem;
+}
+
+.track-btn {
+    flex: 1;
+    padding: 0.5rem 1rem;
+    border: none;
+    border-radius: 6px;
+    font-size: 0.9rem;
+    cursor: pointer;
+    transition: var(--suno-transition);
+    text-decoration: none;
+    text-align: center;
+    display: inline-block;
+}
+
+.download-btn {
+    background: var(--suno-success);
+    color: white;
+}
+
+.download-btn:hover {
+    background: #059669;
+    transform: translateY(-2px);
+}
+
+.share-btn {
+    background: var(--suno-info);
+    color: white;
+}
+
+.share-btn:hover {
+    background: #2563eb;
+    transform: translateY(-2px);
+}
+
+.track-image {
+    text-align: center;
+    margin-top: 1rem;
+}
+
+.track-image img {
+    max-width: 100%;
+    border-radius: 8px;
+    box-shadow: var(--suno-shadow);
+}
+
+/* Messages d'erreur et de succès */
+.suno-error-box,
+.suno-success-box,
+.suno-info-box,
+.suno-warning-box {
+    padding: 1rem;
+    border-radius: 8px;
+    margin: 1rem 0;
+    animation: slideIn 0.3s ease-out;
+}
+
+.suno-error-box {
+    background: #fee2e2;
+    border: 2px solid var(--suno-error);
+    color: #991b1b;
+}
+
+.suno-success-box {
+    background: #dcfce7;
+    border: 2px solid var(--suno-success);
+    color: #14532d;
+}
+
+.suno-info-box {
+    background: #dbeafe;
+    border: 2px solid var(--suno-info);
+    color: #1e3a8a;
+}
+
+.suno-warning-box {
+    background: #fef3c7;
+    border: 2px solid var(--suno-warning);
+    color: #92400e;
+}
+
+/* No results */
+.suno-no-results {
+    text-align: center;
+    padding: 3rem;
+    background: var(--suno-background);
+    border-radius: var(--suno-border-radius);
+    color: var(--suno-text-light);
+}
+
+.suno-no-results p {
+    margin: 0.5rem 0;
+}
+
+/* Test container */
+.suno-test-container {
+    max-width: 600px;
+    margin: 0 auto;
+    padding: 2rem;
+    background: var(--suno-surface);
+    border-radius: var(--suno-border-radius);
+    box-shadow: var(--suno-shadow);
+}
+
+.suno-test-container h3 {
+    color: var(--suno-text);
+    font-size: 1.5rem;
+    margin-bottom: 1.5rem;
+    text-align: center;
+}
+
+/* Compteur de caractères */
+.char-counter {
+    font-size: 0.8rem;
+    color: var(--suno-text-light);
+    text-align: right;
+    margin-top: 0.25rem;
+}
+
+.char-counter.over-limit {
+    color: var(--suno-error);
+    font-weight: 600;
+}
+
+/* Animations */
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes slideIn {
+    from {
+        opacity: 0;
+        transform: translateX(-20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .suno-container {
+        padding: 1.5rem;
+        margin: 1rem;
+    }
+    
+    .form-row {
+        grid-template-columns: 1fr;
+    }
+    
+    .tracks-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .result-actions {
+        flex-direction: column;
+        align-items: stretch;
+    }
+    
+    .track-actions {
+        flex-direction: column;
+    }
+}
+
+@media (max-width: 480px) {
+    .suno-container {
+        padding: 1rem;
+        margin: 0.5rem;
+    }
+    
+    .suno-container h3 {
+        font-size: 1.5rem;
+    }
+    
+    .form-group input,
+    .form-group textarea,
+    .form-group select {
+        padding: 0.6rem;
+        font-size: 0.9rem;
+    }
+}
+
+/* Mode sombre (optionnel) */
+@media (prefers-color-scheme: dark) {
+    :root {
+        --suno-background: #0f172a;
+        --suno-surface: #1e293b;
+        --suno-text: #f1f5f9;
+        --suno-text-light: #94a3b8;
+        --suno-border: #334155;
+    }
+    
+    .suno-error-box {
+        background: #7f1d1d;
+        color: #fecaca;
+    }
+    
+    .suno-success-box {
+        background: #14532d;
+        color: #bbf7d0;
+    }
+    
+    .suno-info-box {
+        background: #1e3a8a;
+        color: #bfdbfe;
+    }
+    
+    .suno-warning-box {
+        background: #78350f;
+        color: #fed7aa;
+    }
+}
