@@ -1,22 +1,33 @@
-# 🎵 Suno Music Generator - Plugin WordPress
+# 🎵 Suno Music Generator - Plugin WordPress v2.0
 
-Un plugin WordPress permettant de générer des chansons personnalisées avec l'intelligence artificielle via l'API Suno.
+Un plugin WordPress permettant de générer des chansons personnalisées avec l'intelligence artificielle via l'API SunoAPI.org
 
-![Version](https://img.shields.io/badge/version-2.0.0-blue.svg)
-![WordPress](https://img.shields.io/badge/WordPress-5.0+-green.svg)
+![Version](https://img.shields.io/badge/version-2.0-green.svg)
+![WordPress](https://img.shields.io/badge/WordPress-5.0+-blue.svg)
 ![PHP](https://img.shields.io/badge/PHP-7.4+-purple.svg)
 ![License](https://img.shields.io/badge/license-GPL--2.0-red.svg)
 
-## ✨ Fonctionnalités
+## ✨ Nouveautés v2.0
 
-- 🎼 **Génération de musique IA** : Créez des chansons personnalisées avec Suno
-- 📝 **Formulaire intuitif** : Interface simple pour décrire votre chanson
-- 🎨 **Styles musicaux variés** : Pop, Rock, Jazz, Hip-Hop, et plus
-- 📱 **Responsive** : Fonctionne sur desktop, tablette et mobile
-- 💾 **Historique** : Sauvegarde de toutes vos créations
-- 🔊 **Lecteur intégré** : Écoutez vos créations directement sur votre site
-- 📤 **Partage social** : Partagez facilement sur les réseaux sociaux
-- 🔄 **Multi-endpoints** : Support de plusieurs API pour une meilleure fiabilité
+- ✅ **Correction complète** du système d'affichage des morceaux
+- ✅ **Récupération fiable** des URLs audio après génération
+- ✅ **Interface améliorée** avec animations et notifications
+- ✅ **Gestion des brouillons** automatique
+- ✅ **Support multi-formats** (MP3, MP4)
+- ✅ **Système de partage social** intégré
+- ✅ **Meilleure gestion des erreurs** et des timeouts
+- ✅ **Design responsive** optimisé
+
+## 🎼 Fonctionnalités
+
+- 🎵 **Génération de musique IA** : Créez des chansons personnalisées en quelques secondes
+- 📝 **Formulaire intuitif** : Interface simple et moderne
+- 🎨 **Styles musicaux variés** : Pop, Rock, Jazz, Hip-Hop, Électronique, et plus
+- 📱 **100% Responsive** : Fonctionne parfaitement sur tous les appareils
+- 💾 **Historique complet** : Toutes vos créations sauvegardées
+- 🔊 **Lecteur intégré** : Écoutez directement sur votre site
+- 📤 **Partage social** : Twitter, Facebook, et copie de lien
+- 🔄 **Sauvegarde automatique** : Vos brouillons sont conservés
 
 ## 🚀 Installation
 
@@ -25,178 +36,179 @@ Un plugin WordPress permettant de générer des chansons personnalisées avec l'
 - PHP 7.4 ou supérieur
 - Clé API de [SunoAPI.org](https://sunoapi.org)
 
-### Étapes d'installation
+### Méthode 1 : Installation via GitHub
 
-1. **Téléchargez le plugin**
-   ```bash
-   git clone https://github.com/WeAreReForm/suno-music-generator.git
-   ```
+```bash
+# 1. Allez dans le dossier des plugins WordPress
+cd /path/to/wordpress/wp-content/plugins/
 
-2. **Uploadez dans WordPress**
-   - Placez le dossier dans `/wp-content/plugins/`
-   - Ou uploadez le fichier ZIP via l'admin WordPress
+# 2. Clonez le dépôt
+git clone https://github.com/WeAreReForm/suno-music-generator.git
 
-3. **Activez le plugin**
-   - Allez dans `Extensions > Extensions installées`
-   - Activez "Suno Music Generator"
+# 3. Activez le plugin dans WordPress Admin
+```
 
-4. **Configurez l'API**
-   - Allez dans `Réglages > Suno Music`
-   - Entrez votre clé API de SunoAPI.org
-   - Testez la connexion avec `[suno_test_api]`
+### Méthode 2 : Installation manuelle
+
+1. Téléchargez la dernière version depuis [GitHub](https://github.com/WeAreReForm/suno-music-generator)
+2. Décompressez dans `/wp-content/plugins/`
+3. Activez le plugin dans WordPress Admin
+
+### Configuration
+
+1. Allez dans **Réglages > Suno Music**
+2. Entrez votre clé API de [SunoAPI.org](https://sunoapi.org)
+3. Testez la connexion avec `[suno_test_api]`
 
 ## 🎯 Utilisation
 
 ### Shortcodes disponibles
 
-#### Formulaire de génération
+#### 1. Formulaire de génération
 ```php
 [suno_music_form]
 ```
 Affiche le formulaire complet de création de musique.
 
-#### Lecteur de musiques
+#### 2. Playlist des créations
 ```php
 [suno_music_player]
 [suno_music_player user_id="123" limit="5"]
 ```
-Affiche les créations musicales d'un utilisateur.
+Affiche les créations musicales avec lecteur intégré.
 
-#### Test de connectivité (admin uniquement)
+#### 3. Test de l'API (admin seulement)
 ```php
 [suno_test_api]
 ```
-Teste la connexion à l'API Suno.
-
-#### Informations de débogage (admin uniquement)
-```php
-[suno_debug]
-```
-Affiche les statistiques et informations de débogage.
+Vérifie la connexion à l'API et affiche les crédits disponibles.
 
 ### Exemple d'utilisation
 
-1. Ajoutez `[suno_music_form]` sur une page
-2. Décrivez votre chanson (ex: "Une ballade pop sur l'amour")
-3. Choisissez un style musical (optionnel)
-4. Ajoutez des paroles personnalisées (optionnel)
-5. Cliquez sur "Générer la musique"
-6. Attendez la génération (30-60 secondes)
-7. Écoutez et partagez votre création !
+1. Créez une nouvelle page WordPress
+2. Ajoutez le shortcode `[suno_music_form]`
+3. Publiez la page
+4. Vos visiteurs peuvent maintenant :
+   - Décrire leur chanson idéale
+   - Choisir un style musical
+   - Ajouter des paroles personnalisées
+   - Générer et télécharger leur création
 
-## ⚙️ Configuration
-
-### Paramètres du plugin
-
-Dans `Réglages > Suno Music` :
-
-- **Clé API** : Votre clé d'accès SunoAPI.org
-- **Endpoint par défaut** : Choisissez l'endpoint API principal
-- **Test de connectivité** : Vérifiez que tout fonctionne
+## ⚙️ Configuration avancée
 
 ### Base de données
 
-Le plugin crée automatiquement la table `wp_suno_generations` pour stocker :
-- Les prompts utilisateurs
-- Les IDs de tâches
-- Les URLs des fichiers générés
-- Les métadonnées des chansons
-- Les réponses API pour débogage
+Le plugin crée automatiquement la table `wp_suno_generations` avec les champs suivants :
+
+| Champ | Type | Description |
+|-------|------|-------------|
+| id | INT | Identifiant unique |
+| user_id | BIGINT | ID de l'utilisateur WordPress |
+| task_id | VARCHAR | ID de la tâche Suno |
+| prompt | TEXT | Description de la chanson |
+| style | VARCHAR | Style musical choisi |
+| title | VARCHAR | Titre de la chanson |
+| lyrics | TEXT | Paroles personnalisées |
+| status | VARCHAR | Statut de génération |
+| audio_url | VARCHAR | URL du fichier audio |
+| video_url | VARCHAR | URL de la vidéo (si disponible) |
+| image_url | VARCHAR | URL de l'artwork |
+| duration | INT | Durée en secondes |
+| created_at | DATETIME | Date de création |
+| completed_at | DATETIME | Date de complétion |
+
+### Hooks WordPress
+
+Le plugin offre plusieurs hooks pour personnalisation :
+
+```php
+// Actions AJAX
+wp_ajax_generate_music
+wp_ajax_check_music_status
+wp_ajax_test_suno_api
+
+// Filtres (à venir dans v2.1)
+suno_music_max_prompt_length
+suno_music_check_interval
+suno_music_max_timeout
+```
 
 ## 🛠️ Développement
 
 ### Structure du projet
 ```
 suno-music-generator/
-├── suno-music-generator.php    # Fichier principal du plugin
+├── suno-music-generator-v2.php  # Fichier principal v2.0
 ├── assets/
-│   ├── suno-music.js          # Interface JavaScript
-│   └── suno-music.css         # Styles CSS
-├── languages/                 # Fichiers de traduction
-└── README.md                  # Documentation
+│   ├── suno-music-v2.js        # JavaScript v2.0
+│   └── suno-music-v2.css       # Styles CSS v2.0
+├── README.md                    # Documentation
+└── CHANGELOG.md                 # Historique des versions
 ```
 
-### API utilisée
+### API SunoAPI.org
 
-Ce plugin utilise [SunoAPI.org](https://sunoapi.org) pour :
-- Générer des chansons avec l'IA Suno
-- Récupérer les fichiers audio/vidéo
-- Gérer les crédits et limitations
+Ce plugin utilise l'API [SunoAPI.org](https://sunoapi.org) avec les endpoints suivants :
 
-### Support multi-endpoints
+- `POST /api/generate` : Génération de musique
+- `GET /api/get?ids={id}` : Vérification du statut
+- `GET /api/get_limit` : Vérification des crédits
 
-La version 2.0.0 supporte plusieurs endpoints pour une meilleure fiabilité :
-- API principale : `https://api.sunoapi.org`
-- API secondaire : `https://apibox.erweima.ai`
-- API de secours : `https://sunoapi.org`
+### Débogage
 
-### Hooks WordPress
+Pour activer le mode debug :
 
-Le plugin utilise :
-- `wp_ajax_generate_music` : Génération AJAX
-- `wp_ajax_check_music_status` : Vérification du statut
-- `admin_menu` : Page d'administration
-- `wp_enqueue_scripts` : Chargement des assets
-
-## 🐛 Dépannage
-
-### Problèmes courants
-
-**❌ "Clé API non configurée"**
-- Allez dans Réglages > Suno Music
-- Ajoutez votre clé API de sunoapi.org
-
-**❌ "Limite de crédits atteinte"**
-- Vérifiez vos crédits sur sunoapi.org
-- Rechargez votre compte si nécessaire
-
-**❌ "Impossible de se connecter à l'API"**
-- Vérifiez votre connexion internet
-- Testez avec `[suno_test_api]`
-- Le plugin essaiera automatiquement plusieurs endpoints
-
-### Logs de débogage
-
-Activez `WP_DEBUG` dans `wp-config.php` pour voir les logs détaillés :
 ```php
+// Dans wp-config.php
 define('WP_DEBUG', true);
 define('WP_DEBUG_LOG', true);
+define('WP_DEBUG_DISPLAY', false);
 ```
+
+Les logs sont disponibles dans `/wp-content/debug.log`
+
+## 🐛 Résolution des problèmes
+
+### "Clé API non configurée"
+→ Allez dans Réglages > Suno Music et ajoutez votre clé
+
+### "Limite de crédits atteinte"
+→ Rechargez vos crédits sur [SunoAPI.org](https://sunoapi.org)
+
+### "La génération échoue"
+1. Vérifiez votre connexion internet
+2. Testez avec `[suno_test_api]`
+3. Vérifiez les logs WordPress
+4. Contactez le support SunoAPI
+
+### "Pas d'audio dans la playlist"
+→ La v2.0 corrige ce problème. Mettez à jour le plugin.
 
 ## 📋 Changelog
 
-### Version 2.0.0 (19/08/2025)
-- ✅ Support multi-endpoints pour meilleure fiabilité
-- ✅ Amélioration de l'extraction des URLs
-- ✅ Meilleur système de débogage
-- ✅ Interface admin améliorée
-- ✅ Support de différents formats d'API
-- ✅ Gestion d'erreurs optimisée
-
-### Version 1.7.0
-- ✅ Timeout étendu à 5 minutes
-- ✅ Sauvegarde des réponses API
-- ✅ Nouveaux shortcodes de débogage
+### Version 2.0 (21/08/2025)
+- ✅ Correction complète du système d'affichage
+- ✅ Nouvelle interface utilisateur moderne
+- ✅ Ajout du système de notifications
+- ✅ Sauvegarde automatique des brouillons
+- ✅ Partage social intégré
+- ✅ Meilleure gestion des erreurs
 
 ### Version 1.1
-- ✅ Correction de la compatibilité SunoAPI.org
-- ✅ Amélioration du système de test API
-- ✅ Interface utilisateur améliorée
+- 🔧 Tentative de correction API
+- 🔧 Amélioration des tests
 
 ### Version 1.0
 - 🚀 Version initiale
-- 🎵 Génération de musique basique
-- 📝 Formulaire de création
-- 💾 Sauvegarde en base de données
 
 ## 🤝 Contribution
 
-Les contributions sont les bienvenues ! 
+Les contributions sont les bienvenues !
 
 1. Forkez le projet
-2. Créez une branche feature (`git checkout -b feature/AmazingFeature`)
-3. Committez vos changements (`git commit -m 'Add AmazingFeature'`)
-4. Pushez sur la branche (`git push origin feature/AmazingFeature`)
+2. Créez votre branche (`git checkout -b feature/AmazingFeature`)
+3. Committez (`git commit -m 'Add AmazingFeature'`)
+4. Pushez (`git push origin feature/AmazingFeature`)
 5. Ouvrez une Pull Request
 
 ## 📝 Licence
@@ -205,19 +217,31 @@ Ce projet est sous licence GPL-2.0. Voir le fichier [LICENSE](LICENSE) pour plus
 
 ## 🙏 Remerciements
 
-- [Suno](https://suno.ai) pour leur incroyable technologie IA
-- [SunoAPI.org](https://sunoapi.org) pour l'API accessible
-- La communauté WordPress pour l'écosystème
+- [Suno AI](https://suno.ai) pour leur technologie IA révolutionnaire
+- [SunoAPI.org](https://sunoapi.org) pour l'API accessible et fiable
+- La communauté WordPress pour leur support
 
 ## 📞 Support
 
 - 🐛 **Issues** : [GitHub Issues](https://github.com/WeAreReForm/suno-music-generator/issues)
-- 💬 **Discussions** : [GitHub Discussions](https://github.com/WeAreReForm/suno-music-generator/discussions)
 - 📧 **Email** : hello@wearereform.fr
+- 🌐 **Site** : [WeAreReForm](https://wearereform.fr)
 
 ---
 
-## 🚀 Développement en cours
-Ce plugin est activement développé. Dernière mise à jour: **19/08/2025**
+## 🎉 Installation rapide sur votre site
+
+```bash
+# Dans votre conteneur Docker WordPress
+docker exec -it wordpress-container bash
+cd /var/www/html/wp-content/plugins/
+git clone https://github.com/WeAreReForm/suno-music-generator.git
+```
+
+Puis activez le plugin dans WordPress Admin !
+
+---
 
 ⭐ **Si ce plugin vous est utile, n'hésitez pas à lui donner une étoile sur GitHub !**
+
+🚀 **Version 2.0** - Stable et fonctionnelle - Août 2025
