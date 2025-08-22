@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Suno Music Generator
  * Description: Générateur de musique IA avec Suno via formulaire WordPress
- * Version: 1.2
+ * Version: 1.3
  * Author: Assistant IA
  * License: GPL-2.0
  */
@@ -14,7 +14,7 @@ if (!defined('ABSPATH')) {
 class SunoMusicGenerator {
     
     private $api_key;
-    private $api_base_url = 'https://api.sunoapi.org';
+    private $api_base_url = 'https://api.sunoapi.com';
     
     public function __construct() {
         add_action('init', array($this, 'init'));
@@ -53,6 +53,7 @@ class SunoMusicGenerator {
             id mediumint(9) NOT NULL AUTO_INCREMENT,
             user_id bigint(20) DEFAULT 0,
             task_id varchar(255) NOT NULL,
+            clip_ids text DEFAULT '',
             prompt text NOT NULL,
             style varchar(255) DEFAULT '',
             title varchar(255) DEFAULT '',
@@ -210,7 +211,7 @@ class SunoMusicGenerator {
                                    value="<?php echo esc_attr($api_key); ?>" 
                                    class="regular-text" />
                             <p class="description">
-                                Obtenez votre clé API sur <a href="https://sunoapi.org" target="_blank">SunoAPI.org</a>
+                                Obtenez votre clé API sur <a href="https://sunoapi.com" target="_blank">SunoAPI.com</a>
                             </p>
                         </td>
                     </tr>
@@ -327,14 +328,14 @@ class SunoMusicGenerator {
             'suno-music-js', 
             plugin_dir_url(__FILE__) . 'assets/suno-music.js', 
             array('jquery'), 
-            '1.2', 
+            '1.3', 
             true
         );
         wp_enqueue_style(
             'suno-music-css', 
             plugin_dir_url(__FILE__) . 'assets/suno-music.css', 
             array(), 
-            '1.2'
+            '1.3'
         );
         
         wp_localize_script('suno-music-js', 'suno_ajax', array(
@@ -365,7 +366,7 @@ class SunoMusicGenerator {
                     <label for="music-prompt">Description de la chanson *</label>
                     <textarea id="music-prompt" name="prompt" rows="3" required 
                         placeholder="Ex: Une chanson pop énergique sur l'été et la liberté"></textarea>
-                    <div id="char-counter" class="char-counter"></div>
+                    <div id="char-counter" class="char-counter">0/500</div>
                 </div>
                 
                 <div class="form-row">
@@ -403,10 +404,10 @@ class SunoMusicGenerator {
                         placeholder="Laissez vide pour une génération automatique"></textarea>
                 </div>
                 
-                <div class="form-group">
+                <div class="form-group checkbox-group">
                     <label>
                         <input type="checkbox" id="instrumental" name="instrumental">
-                        Version instrumentale (sans voix)
+                        <span>Version instrumentale (sans voix)</span>
                     </label>
                 </div>
                 
@@ -418,10 +419,14 @@ class SunoMusicGenerator {
             <div id="generation-status" class="suno-status" style="display: none;">
                 <div class="status-content">
                     <div class="spinner"></div>
-                    <p>Génération en cours... <span id="status-text">Initialisation</span></p>
+                    <p class="status-message">
+                        <strong>Génération en cours...</strong>
+                        <span id="status-text">Initialisation</span>
+                    </p>
                     <div class="progress-bar">
                         <div class="progress-fill"></div>
                     </div>
+                    <p class="status-info">Cela peut prendre 1 à 2 minutes</p>
                 </div>
             </div>
             
@@ -532,9 +537,10 @@ class SunoMusicGenerator {
     }
     
     private function test_api_connection() {
-        $response = wp_remote_get($this->api_base_url . '/api/v1/get_limit', array(
+        // Test avec un endpoint simple qui devrait retourner les infos de compte
+        $response = wp_remote_get($this->api_base_url . '/api/get_limit', array(
             'headers' => array(
-                'Authorization' => 'Bearer ' . $this->api_key,
+                'api-key' => $this->api_key,
                 'Content-Type' => 'application/json'
             ),
             'timeout' => 15
@@ -554,8 +560,8 @@ class SunoMusicGenerator {
             $data = json_decode($body, true);
             return array(
                 'success' => true,
-                'credits' => $data['credits'] ?? 'Unknown',
-                'version' => $data['version'] ?? '1.0',
+                'credits' => $data['credits'] ?? $data['quota'] ?? 'Unknown',
+                'version' => '1.0',
                 'raw' => $data
             );
         } else {
@@ -591,35 +597,35 @@ class SunoMusicGenerator {
             wp_send_json_error('Description requise');
         }
         
-        // Préparer les données pour l'API
-        $api_data = array(
-            'customMode' => true,
-            'input' => array(
-                'gpt_description_prompt' => $prompt,
-                'make_instrumental' => $instrumental
-            )
-        );
-        
+        // Construire le prompt complet
+        $full_prompt = $prompt;
         if (!empty($style)) {
-            $api_data['input']['style'] = $style;
+            $full_prompt = $style . ', ' . $full_prompt;
         }
         
+        // Préparer les données pour l'API
+        $api_data = array(
+            'prompt' => $full_prompt,
+            'make_instrumental' => $instrumental,
+            'wait_audio' => false
+        );
+        
         if (!empty($title)) {
-            $api_data['input']['title'] = $title;
+            $api_data['title'] = $title;
         }
         
         if (!empty($lyrics)) {
-            $api_data['input']['lyric'] = $lyrics;
+            $api_data['prompt'] = '[Verse]\n' . $lyrics . '\n\n' . $full_prompt;
         }
         
-        // Appel API
-        $response = wp_remote_post($this->api_base_url . '/api/v1/generate', array(
+        // Appel API pour générer la musique
+        $response = wp_remote_post($this->api_base_url . '/api/generate', array(
             'headers' => array(
-                'Authorization' => 'Bearer ' . $this->api_key,
+                'api-key' => $this->api_key,
                 'Content-Type' => 'application/json'
             ),
             'body' => json_encode($api_data),
-            'timeout' => 30
+            'timeout' => 60
         ));
         
         if (is_wp_error($response)) {
@@ -630,55 +636,79 @@ class SunoMusicGenerator {
         $body = wp_remote_retrieve_body($response);
         $data = json_decode($body, true);
         
-        if ($status_code === 200 && isset($data['task_id'])) {
-            // Sauvegarder en base
-            global $wpdb;
-            $wpdb->insert(
-                $wpdb->prefix . 'suno_generations',
-                array(
-                    'user_id' => get_current_user_id(),
-                    'task_id' => $data['task_id'],
-                    'prompt' => $prompt,
-                    'style' => $style,
-                    'title' => $title,
-                    'lyrics' => $lyrics,
-                    'status' => 'pending',
-                    'created_at' => current_time('mysql')
-                )
-            );
-            
-            wp_send_json_success(array(
-                'task_id' => $data['task_id'],
-                'message' => 'Génération démarrée avec succès !'
-            ));
-        } else {
-            $error_msg = $data['error'] ?? 'Erreur inconnue';
-            if ($status_code === 401) {
-                $error_msg = 'Clé API invalide';
-            } elseif ($status_code === 429) {
-                $error_msg = 'Limite de crédits atteinte';
+        if ($status_code === 200 && !empty($data)) {
+            // Extraire les IDs des clips générés
+            $clip_ids = array();
+            if (isset($data['clips'])) {
+                foreach ($data['clips'] as $clip) {
+                    $clip_ids[] = $clip['id'];
+                }
+            } elseif (isset($data[0]['id'])) {
+                foreach ($data as $clip) {
+                    $clip_ids[] = $clip['id'];
+                }
             }
             
-            wp_send_json_error($error_msg);
+            if (!empty($clip_ids)) {
+                // Sauvegarder en base
+                global $wpdb;
+                $wpdb->insert(
+                    $wpdb->prefix . 'suno_generations',
+                    array(
+                        'user_id' => get_current_user_id(),
+                        'task_id' => implode(',', $clip_ids),
+                        'clip_ids' => json_encode($clip_ids),
+                        'prompt' => $prompt,
+                        'style' => $style,
+                        'title' => $title,
+                        'lyrics' => $lyrics,
+                        'status' => 'pending',
+                        'created_at' => current_time('mysql')
+                    )
+                );
+                
+                wp_send_json_success(array(
+                    'clip_ids' => $clip_ids,
+                    'message' => 'Génération démarrée avec succès !'
+                ));
+            } else {
+                wp_send_json_error('Aucun ID de clip retourné');
+            }
+        } else {
+            $error_msg = $data['detail'] ?? $data['error'] ?? 'Erreur inconnue';
+            if ($status_code === 401) {
+                $error_msg = 'Clé API invalide';
+            } elseif ($status_code === 402) {
+                $error_msg = 'Crédits insuffisants';
+            }
+            
+            wp_send_json_error($error_msg . ' (Code: ' . $status_code . ')');
         }
     }
     
     public function ajax_check_music_status() {
         check_ajax_referer('suno_music_nonce', 'nonce');
         
-        $task_id = sanitize_text_field($_POST['task_id']);
+        $clip_ids = $_POST['clip_ids'] ?? array();
         
-        if (empty($task_id)) {
-            wp_send_json_error('Task ID requis');
+        if (empty($clip_ids)) {
+            wp_send_json_error('IDs de clips requis');
+        }
+        
+        // Convertir en tableau si c'est une chaîne
+        if (is_string($clip_ids)) {
+            $clip_ids = json_decode($clip_ids, true);
         }
         
         // Appel API pour vérifier le statut
-        $response = wp_remote_get($this->api_base_url . '/api/v1/music/' . $task_id, array(
+        $ids_string = is_array($clip_ids) ? implode(',', $clip_ids) : $clip_ids;
+        
+        $response = wp_remote_get($this->api_base_url . '/api/get?ids=' . $ids_string, array(
             'headers' => array(
-                'Authorization' => 'Bearer ' . $this->api_key,
+                'api-key' => $this->api_key,
                 'Content-Type' => 'application/json'
             ),
-            'timeout' => 15
+            'timeout' => 30
         ));
         
         if (is_wp_error($response)) {
@@ -693,26 +723,28 @@ class SunoMusicGenerator {
         $data = json_decode($body, true);
         
         if (!empty($data)) {
-            // Parser les données selon le format de l'API
-            $track_data = is_array($data) && isset($data[0]) ? $data[0] : $data;
+            // Vérifier le statut du premier clip
+            $clip = is_array($data) && isset($data[0]) ? $data[0] : $data;
             
             $status = 'processing';
             $audio_url = '';
             $video_url = '';
             $image_url = '';
             
-            // Déterminer le statut
-            if (!empty($track_data['audio_url']) || !empty($track_data['url'])) {
-                $status = 'completed';
-                $audio_url = $track_data['audio_url'] ?? $track_data['url'] ?? '';
-                $video_url = $track_data['video_url'] ?? '';
-                $image_url = $track_data['image_url'] ?? $track_data['cover_url'] ?? '';
-            } elseif (isset($track_data['status'])) {
-                $status = $track_data['status'];
+            // Déterminer le statut basé sur les champs disponibles
+            if (isset($clip['status'])) {
+                $status = $clip['status'];
             }
             
-            // Mettre à jour la base
-            if ($status === 'completed' && !empty($audio_url)) {
+            if (!empty($clip['audio_url'])) {
+                $status = 'complete';
+                $audio_url = $clip['audio_url'];
+                $video_url = $clip['video_url'] ?? '';
+                $image_url = $clip['image_url'] ?? $clip['image_large_url'] ?? '';
+            }
+            
+            // Mettre à jour la base si complété
+            if ($status === 'complete' && !empty($audio_url)) {
                 global $wpdb;
                 $wpdb->update(
                     $wpdb->prefix . 'suno_generations',
@@ -723,7 +755,7 @@ class SunoMusicGenerator {
                         'image_url' => $image_url,
                         'completed_at' => current_time('mysql')
                     ),
-                    array('task_id' => $task_id)
+                    array('task_id' => $ids_string)
                 );
             }
             
@@ -731,7 +763,9 @@ class SunoMusicGenerator {
                 'status' => $status,
                 'audio_url' => $audio_url,
                 'video_url' => $video_url,
-                'image_url' => $image_url
+                'image_url' => $image_url,
+                'title' => $clip['title'] ?? '',
+                'raw' => $clip
             ));
         } else {
             wp_send_json_success(array(
